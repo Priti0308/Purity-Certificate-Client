@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { FaEye, FaFilePdf, FaTrash, FaSpinner } from 'react-icons/fa';
+import { FaEye, FaFilePdf, FaTrash, FaSpinner, FaArrowLeft } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useNavigate } from "react-router-dom";
 
 const CertificateList = () => {
+  const navigate = useNavigate(); 
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
 
   const fetchCertificates = async () => {
     try {
@@ -139,16 +142,26 @@ const CertificateList = () => {
 
   return (
     <div className="container py-5">
+      
       <h2 className="text-center text-primary fw-bold mb-4">
         Certificate Management
       </h2>
+      <div className="mb-3">
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => navigate(-1)} // Go back one step
+        >
+          <FaArrowLeft className="me-2" />
+          Back
+        </button>
+      </div>
 
       <div className="card shadow border-0">
         <div className="card-body table-responsive">
           <table className="table table-hover align-middle mb-0">
             <thead className="table-dark">
               <tr>
-                <th className="fw-semibold">#</th>
+                <th className="fw-semibold">Sr.No</th>
                 <th className="fw-semibold">Serial No</th>
                 <th className="fw-semibold">Name</th>
                 <th className="fw-semibold">Item</th>

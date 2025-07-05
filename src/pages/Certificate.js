@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { FaPlus, FaDownload, FaEdit } from "react-icons/fa";
+import { FaDownload, FaEdit, FaArrowLeft  } from "react-icons/fa";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { useNavigate } from "react-router-dom";
 
 const Certificate = () => {
+  const navigate = useNavigate(); 
   const [formData, setFormData] = useState({
     serialNo: "",
     name: "",
@@ -186,6 +188,15 @@ const Certificate = () => {
 
   return (
     <div className="container py-4">
+      <div className="mb-3">
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => navigate(-1)} // Go back one step
+        >
+          <FaArrowLeft className="me-2" />
+          Back
+        </button>
+      </div>
       <h3 className="text-center text-primary mb-4">
         {editId ? "Edit" : "Create"} Purity Certificate
       </h3>
@@ -245,7 +256,7 @@ const Certificate = () => {
 
         <div className="text-end mt-4">
           <button type="submit" className="btn btn-success">
-            <FaPlus className="me-2" /> {editId ? "Update" : "Submit"}{" "}
+            {editId ? "Update" : "Submit"}{" "}
             Certificate
           </button>
         </div>
@@ -259,7 +270,7 @@ const Certificate = () => {
           <table className="table table-bordered">
             <thead className="table-light">
               <tr>
-                <th>#</th>
+                <th>Sr.No</th>
                 <th>Name</th>
                 <th>Item</th>
                 <th>Fineness</th>
