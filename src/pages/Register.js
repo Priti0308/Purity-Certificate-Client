@@ -16,7 +16,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/vendors/register', formData);
+      const res = await axios.post('https://purity-certificate-server.onrender.com/api/vendors/register', formData);
       alert(res.data.message || 'Vendor registered successfully!');
       setFormData({ name: '', mobile: '', businessName: '', password: '' });
     } catch (error) {

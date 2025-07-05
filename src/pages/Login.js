@@ -10,13 +10,16 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/vendors/login', {
+      const response = await axios.post('https://purity-certificate-server.onrender.com/api/vendors/login', {
         name,
         password,
       });
-      
 
+      // ✅ Save vendor token and info in localStorage
+      localStorage.setItem('vendorToken', response.data.token);
       localStorage.setItem('vendor', JSON.stringify(response.data.vendor));
+
+      // ✅ Redirect to dashboard
       navigate('/vendor-dashboard');
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');

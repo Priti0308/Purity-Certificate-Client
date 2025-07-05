@@ -1,111 +1,210 @@
-// src/pages/CertificateList.js
-import React, { useState } from 'react';
-import { FaEye, FaPrint, FaTrash } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { FaEye, FaFilePdf, FaTrash, FaSpinner } from 'react-icons/fa';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const CertificateList = () => {
-  const [certificates, setCertificates] = useState([
-    {
-      id: 1,
-      customer: 'Ravi Patel',
-      goldPurity: '91.6',
-      silverPurity: '99.9',
-      weight: '22',
-      remarks: 'Gold necklace',
-    },
-    {
-      id: 2,
-      customer: 'Anjali Shah',
-      goldPurity: '92',
-      silverPurity: '',
-      weight: '15',
-      remarks: 'Gold ring',
-    },
-    {
-      id: 3,
-      customer: 'Amit Rao',
-      goldPurity: '',
-      silverPurity: '99.5',
-      weight: '40',
-      remarks: 'Silver chain',
-    },
-  ]);
+  const [certificates, setCertificates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handlePrint = (cert) => {
-    const win = window.open('', '_blank');
-    win.document.write(`
-      <html><head><title>Print Certificate</title></head><body>
-      <h2>Purity Certificate</h2>
-      <p><strong>Customer:</strong> ${cert.customer}</p>
-      <p><strong>Gold Purity:</strong> ${cert.goldPurity}%</p>
-      <p><strong>Silver Purity:</strong> ${cert.silverPurity}%</p>
-      <p><strong>Weight:</strong> ${cert.weight}g</p>
-      <p><strong>Remarks:</strong> ${cert.remarks}</p>
-      </body></html>
-    `);
-    win.document.close();
-    win.print();
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this certificate?')) {
-      setCertificates(certificates.filter((cert) => cert.id !== id));
+  const fetchCertificates = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('vendorToken');
+      const res = await axios.get('https://purity-certificate-server.onrender.com/api/certificates', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCertificates(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      setError('Failed to fetch certificates. Please try again.');
+      console.error('Error fetching certificates:', err);
+      setCertificates([]);
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchCertificates();
+  }, []);
+
+  const handleView = (cert) => {
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html>
+        <head>
+          <title>Certificate ${cert.serialNo}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .content { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+            .footer { text-align: right; margin-top: 30px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2 style="color: #2c3e50;">SWARANJALE</h2>
+            <h3 style="color: #34495e;">Purity Certificate</h3>
+          </div>
+          <div class="content">
+            <p><strong>Serial No:</strong> ${cert.serialNo}</p>
+            <p><strong>Name:</strong> ${cert.name}</p>
+            <p><strong>Item:</strong> ${cert.item}</p>
+            <p><strong>Fineness:</strong> ${cert.fineness}%</p>
+            <p><strong>Weight:</strong> ${cert.grossWeight} g</p>
+            <p><strong>Date:</strong> ${cert.date}</p>
+            ${cert.notes ? `<p><strong>Notes:</strong> ${cert.notes}</p>` : ''}
+          </div>
+          <div class="footer">
+            <p>For SWARANJALE</p>
+          </div>
+        </body>
+      </html>
+    `);
+    win.document.close();
+  };
+
+  const handleGeneratePDF = async (cert) => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div style="padding: 20px; font-family: Arial;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #2c3e50;">SWARANJALE</h2>
+          <h3 style="color: #34495e;">Purity Certificate</h3>
+        </div>
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+          <p><strong>Serial No:</strong> ${cert.serialNo}</p>
+          <p><strong>Name:</strong> ${cert.name}</p>
+          <p><strong>Item:</strong> ${cert.item}</p>
+          <p><strong>Fineness:</strong> ${cert.fineness}%</p>
+          <p><strong>Weight:</strong> ${cert.grossWeight} g</p>
+          <p><strong>Date:</strong> ${cert.date}</p>
+          ${cert.notes ? `<p><strong>Notes:</strong> ${cert.notes}</p>` : ''}
+        </div>
+        <div style="text-align: right; margin-top: 20px;">
+          <p>For SWARANJALE</p>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(container);
+    
+    try {
+      const canvas = await html2canvas(container);
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF();
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`certificate_${cert.serialNo}.pdf`);
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
+
+  const handleDelete = async (certId) => {
+    if (!window.confirm('Are you sure you want to delete this certificate?')) return;
+    
+    try {
+      const token = localStorage.getItem('vendorToken');
+      await axios.delete(`https://purity-certificate-server.onrender.com/api/certificates/${certId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await fetchCertificates();
+    } catch (err) {
+      console.error('Error deleting certificate:', err);
+      alert('Failed to delete certificate. Please try again.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container py-5 text-center">
+        <FaSpinner className="spinner-border text-primary" role="status" />
+        <p className="mt-2">Loading certificates...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-5">
+        <div className="alert alert-danger" role="alert">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-5">
-      <h2 className="text-center text-primary fw-bold mb-4">All Submitted Certificates</h2>
+      <h2 className="text-center text-primary fw-bold mb-4">
+        Certificate Management
+      </h2>
 
       <div className="card shadow border-0">
         <div className="card-body table-responsive">
-          {certificates.length === 0 ? (
-            <p className="text-muted">No certificates available.</p>
-          ) : (
-            <table className="table table-bordered table-hover align-middle">
-              <thead className="table-dark">
-                <tr>
-                  <th>#</th>
-                  <th>Customer</th>
-                  <th>Gold Purity</th>
-                  <th>Silver Purity</th>
-                  <th>Weight (g)</th>
-                  <th>Remarks</th>
-                  <th className="text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {certificates.map((cert, index) => (
-                  <tr key={cert.id}>
-                    <td>{index + 1}</td>
-                    <td>{cert.customer}</td>
-                    <td>{cert.goldPurity || '-'}</td>
-                    <td>{cert.silverPurity || '-'}</td>
-                    <td>{cert.weight}</td>
-                    <td>{cert.remarks}</td>
-                    <td className="text-center">
-                      <button className="btn btn-sm btn-outline-info me-2" title="View">
-                        <FaEye />
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-primary me-2"
-                        title="Print"
-                        onClick={() => handlePrint(cert)}
-                      >
-                        <FaPrint />
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        title="Delete"
-                        onClick={() => handleDelete(cert.id)}
-                      >
-                        <FaTrash />
-                      </button>
+          <table className="table table-hover align-middle mb-0">
+            <thead className="table-dark">
+              <tr>
+                <th className="fw-semibold">#</th>
+                <th className="fw-semibold">Serial No</th>
+                <th className="fw-semibold">Name</th>
+                <th className="fw-semibold">Item</th>
+                <th className="fw-semibold">Fineness (%)</th>
+                <th className="fw-semibold">Weight (g)</th>
+                <th className="fw-semibold">Date</th>
+                <th className="fw-semibold text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {certificates.length > 0 ? (
+                certificates.map((cert, idx) => (
+                  <tr key={cert._id || idx}>
+                    <td>{idx + 1}</td>
+                    <td>{cert.serialNo}</td>
+                    <td>{cert.name}</td>
+                    <td>{cert.item}</td>
+                    <td>{cert.fineness}</td>
+                    <td>{cert.grossWeight}</td>
+                    <td>{new Date(cert.date).toLocaleDateString()}</td>
+                    <td>
+                      <div className="d-flex gap-2 justify-content-center">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleView(cert)}
+                          title="View Certificate"
+                        >
+                          <FaEye />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleGeneratePDF(cert)}
+                          title="Download PDF"
+                        >
+                          <FaFilePdf className="me-1" /> PDF
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(cert._id)}
+                          title="Delete Certificate"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="text-center py-4 text-muted">
+                    No certificates found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
