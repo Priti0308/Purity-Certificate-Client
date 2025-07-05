@@ -55,47 +55,53 @@ const Certificate = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!token) {
-      alert("❌ Vendor not authenticated. Please login.");
-      return;
+  e.preventDefault();
+  if (!token) {
+    alert("❌ Vendor not authenticated. Please login.");
+    return;
+  }
+
+  try {
+    if (editId) {
+      // ✅ Update existing certificate
+      await axios.put(
+        `https://purity-certificate-server.onrender.com/api/certificates/${editId}`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("✅ Certificate updated!");
+      setEditId(null);
+    } else {
+      // ✅ Create new certificate
+      await axios.post(
+        `https://purity-certificate-server.onrender.com/api/certificates`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert("✅ Certificate submitted!");
     }
 
-    try {
-      if (editId) {
-        await axios.put(
-          `https://purity-certificate-server.onrender.com/api/certificates/${editId}`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        alert("✅ Certificate updated!");
-        setEditId(null);
-      } else {
-        await axios.put(
-          `https://purity-certificate-server.onrender.com/api/certificates/${editId}`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        alert("✅ Certificate submitted!");
-      }
-      setFormData({
-        serialNo: "",
-        name: "",
-        item: "",
-        fineness: "",
-        grossWeight: "",
-        date: "",
-        notes: "",
-      });
-      fetchCertificates();
-    } catch (err) {
-      console.error(
-        "❌ Error submitting certificate:",
-        err.response?.data || err.message
-      );
-      alert("❌ Error submitting certificate");
-    }
-  };
+    // Reset form and refresh list
+    setFormData({
+      serialNo: "",
+      name: "",
+      item: "",
+      fineness: "",
+      grossWeight: "",
+      date: "",
+      notes: "",
+    });
+
+    fetchCertificates();
+  } catch (err) {
+    console.error(
+      "❌ Error submitting certificate:",
+      err.response?.data || err.message
+    );
+    alert("❌ Error submitting certificate");
+  }
+};
+
 
   const convertToWords = (num) => {
     if (!num || isNaN(num)) return "";
