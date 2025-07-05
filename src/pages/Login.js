@@ -14,12 +14,9 @@ const Login = () => {
         name,
         password,
       });
-
-      // ✅ Save vendor token and info in localStorage
+      
       localStorage.setItem('vendorToken', response.data.token);
       localStorage.setItem('vendor', JSON.stringify(response.data.vendor));
-
-      // ✅ Redirect to dashboard
       navigate('/vendor-dashboard');
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');
