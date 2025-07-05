@@ -45,33 +45,7 @@ const Navbar = () => {
                 Vendor Dashboard
               </Link>
             </li>
-
-            <li className="nav-item mx-2">
-              <Link
-                className={`nav-link fw-semibold ${isActive('/login') ? 'text-dark text-decoration-underline' : 'text-dark'}`}
-                to="/login"
-              >
-                Login
-              </Link>
-            </li>
-
-            <li className="nav-item mx-2">
-              <Link
-                className={`nav-link fw-semibold ${isActive('/register') ? 'text-dark text-decoration-underline' : 'text-dark'}`}
-                to="/register"
-              >
-                 Register
-              </Link>
-            </li>
-
-            <li className="nav-item mx-2">
-              <Link
-                className={`nav-link fw-semibold ${isActive('/admin-login') ? 'text-dark text-decoration-underline' : 'text-dark'}`}
-                to="/admin-login"
-              >
-                Admin Login
-              </Link>
-            </li>
+            
           </ul>
         </div>
       </div>
