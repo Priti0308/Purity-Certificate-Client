@@ -1,25 +1,29 @@
+// src/pages/Login.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [name, setName] = useState('');
+  const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('https://purity-certificate-server.onrender.com/api/vendors/login',{
-        name,
+      const response = await axios.post('https://purity-certificate-server.onrender.com/api/vendors/login', {
+        mobile,
         password,
       });
-      
+
       localStorage.setItem('vendorToken', response.data.token);
       localStorage.setItem('vendor', JSON.stringify(response.data.vendor));
+
+      alert('✅ Login successful!');
       navigate('/vendor-dashboard');
     } catch (err) {
-      alert(err.response?.data?.message || 'Login failed');
+      console.error(err);
+      alert(err.response?.data?.message || '❌ Login failed. Please try again.');
     }
   };
 
@@ -29,7 +33,7 @@ const Login = () => {
 
       <div className="row justify-content-center">
         <div
-          className="col-md-5 col-sm-10 col-11 p-4 rounded"
+          className="col-md-5 col-sm-10 col-11 p-4 rounded shadow-sm"
           style={{
             backgroundColor: '#fff',
             border: '2px solid #F5C45E',
@@ -37,13 +41,14 @@ const Login = () => {
         >
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="form-label fw-semibold">Name</label>
+              <label className="form-label fw-semibold">Mobile Number</label>
               <input
-                type="text"
+                type="tel"
                 className="form-control border-warning"
-                placeholder="Enter your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your 10-digit mobile number"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                pattern="[0-9]{10}"
                 required
               />
             </div>
@@ -63,9 +68,7 @@ const Login = () => {
             <button
               type="submit"
               className="btn w-100 text-white fw-semibold"
-              style={{
-                backgroundColor: '#102E50',
-              }}
+              style={{ backgroundColor: '#102E50' }}
             >
               Login as Vendor
             </button>

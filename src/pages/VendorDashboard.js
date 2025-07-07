@@ -16,11 +16,12 @@ const VendorDashboard = () => {
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
   const [recentActivities, setRecentActivities] = useState([]);
 
+  // Load vendor and dashboard data
   useEffect(() => {
     const fetchData = async () => {
       try {
         const storedVendor = localStorage.getItem('vendor');
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('vendorToken');
 
         if (storedVendor && token) {
           const vendorData = JSON.parse(storedVendor);
@@ -46,7 +47,7 @@ const VendorDashboard = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 300000);
+    const interval = setInterval(fetchData, 300000); // Refresh every 5 min
     return () => clearInterval(interval);
   }, []);
 
@@ -69,8 +70,8 @@ const VendorDashboard = () => {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.put('https://purity-certificate-server.onrender.com/api/vendors', editData, {
+      const token = localStorage.getItem('vendorToken');
+      const res = await axios.put('https://purity-certificate-server.onrender.com/api/vendors/me', editData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setVendor(res.data);
@@ -105,7 +106,7 @@ const VendorDashboard = () => {
       <h2 className="text-center fw-bold text-primary mb-4">Welcome to Your Dashboard</h2>
 
       <div className="row g-4">
-        {/* Profile Section */}
+        {/* Profile */}
         <div className="col-md-4">
           <div className="card shadow-sm border-0 rounded-4 h-100">
             <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -145,7 +146,7 @@ const VendorDashboard = () => {
           </div>
         </div>
 
-        {/* Quick Actions + Stats */}
+        {/* Actions + Stats */}
         <div className="col-md-8">
           <div className="row g-4">
             <div className="col-md-6">
@@ -168,7 +169,7 @@ const VendorDashboard = () => {
             </div>
           </div>
 
-          {/* Stats Section */}
+          {/* Stats */}
           <div className="row g-4 mt-1">
             {[
               { label: 'Total Certificates', icon: <FaList />, color: 'primary', count: stats.total },
@@ -186,7 +187,7 @@ const VendorDashboard = () => {
             ))}
           </div>
 
-          {/* Recent Activities */}
+          {/* Activities */}
           <div className="card shadow-sm border-0 rounded-4 mt-4">
             <div className="card-header bg-white border-0 py-3">
               <h5><FaClock className="me-2 text-primary" />Recent Activities</h5>
