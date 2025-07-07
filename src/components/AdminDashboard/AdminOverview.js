@@ -1,18 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from '../../api/axiosInstance';
-import { FaEdit, FaTrash, FaKey, FaCheck, FaTimes, FaSave } from 'react-icons/fa';
+import {
+  FaPlus, FaEdit, FaTrash, FaSave, FaKey,
+  FaCheck, FaTimes, FaFileExcel, FaFilePdf, FaSearch
+} from 'react-icons/fa';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const AdminOverview = ({ section }) => {
   const [vendors, setVendors] = useState([]);
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [editMode, setEditMode] = useState(null);
   const [editData, setEditData] = useState({});
   const [newVendor, setNewVendor] = useState({
-    name: '',
-    mobile: '',
-    businessName: '',
-    password: '',
+    name: '', mobile: '', businessName: '', password: '', address: ''
   });
 
+  const vendorsPerPage = 10;
+
+  // Fetch all vendors when section loads
   useEffect(() => {
     fetchVendors();
   }, [section]);
@@ -26,173 +34,271 @@ const AdminOverview = ({ section }) => {
     }
   };
 
-  const handleInputChange = (e) => {
+  // Filter + pagination logic
+  const filtered = vendors.filter(v =>
+    [v.name, v.mobile, v.businessName, v.address, v.status]
+      .join(' ')
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+  const totalPages = Math.ceil(filtered.length / vendorsPerPage);
+  const paginated = filtered.slice(
+    (currentPage - 1) * vendorsPerPage,
+    currentPage * vendorsPerPage
+  );
+
+  // --- Add Vendor ---
+  const handleInputChange = e => {
     setNewVendor({ ...newVendor, [e.target.name]: e.target.value });
   };
-
-  const handleAddVendor = async (e) => {
+  const handleAddVendor = async e => {
     e.preventDefault();
     try {
       await axios.post('/vendors', newVendor);
-      alert('Vendor added successfully');
-      setNewVendor({ name: '', mobile: '', businessName: '', password: '' });
+      alert('✅ Vendor added');
+      setNewVendor({ name: '', mobile: '', businessName: '', password: '', address: '' });
       fetchVendors();
     } catch {
-      alert('Failed to add vendor');
+      alert('❌ Add failed');
     }
   };
 
-  const handleEditChange = (e) => {
+  // --- Edit / Save ---
+  const handleEdit = v => {
+    setEditMode(v._id);
+    setEditData(v);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const handleEditChange = e => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
-
-  const handleEdit = (vendor) => {
-    setEditMode(vendor._id);
-    setEditData({ ...vendor });
-  };
-
   const handleSave = async () => {
-    await axios.put(`/vendors/${editMode}`, editData);
-    setEditMode(null);
-    fetchVendors();
+    try {
+      const res = await axios.put(`/vendors/${editMode}`, editData);
+      const updatedVendor = res.data;
+      setVendors(prev =>
+        prev.map(v => (v._id === updatedVendor._id ? updatedVendor : v))
+      );
+      alert('✅ Updated');
+      setEditMode(null);
+    } catch (err) {
+      console.error(err);
+      alert('❌ Update failed');
+    }
   };
 
-  const handleDelete = async (id) => {
+  // --- Delete / Password Reset ---
+  const handleDelete = async id => {
     if (window.confirm('Delete this vendor?')) {
       await axios.delete(`/vendors/${id}`);
+      alert('✅ Deleted');
       fetchVendors();
     }
   };
-
-  const handleSetPassword = async (id) => {
-    const password = prompt('Enter new password:');
-    if (password) {
-      await axios.put(`/vendors/${id}/set-password`, { password });
-      alert('Password set');
+  const handleSetPassword = async id => {
+    const pw = prompt('Enter new password:');
+    if (pw) {
+      await axios.put(`/vendors/${id}/set-password`, { password: pw });
+      alert('✅ Password set');
     }
   };
 
-  const handleApprove = async (id) => {
+  // --- Approve / Reject ---
+  const handleApprove = async id => {
     await axios.put(`/vendors/${id}/approve`);
-    fetchVendors();
+    alert('✅ Approved');
+    setVendors(v => v.filter(x => x._id !== id));
   };
-
-  const handleReject = async (id) => {
+  const handleReject = async id => {
     await axios.put(`/vendors/${id}/reject`);
-    fetchVendors();
+    alert('❌ Rejected');
+    setVendors(v => v.filter(x => x._id !== id));
   };
 
-  const renderTableHeader = () => (
-    <thead style={{ backgroundColor: '#000', color: '#fff' }}>
+  // --- Export ---
+  const exportExcel = () => {
+    const data = filtered.map(v => ({
+      Name: v.name,
+      Mobile: v.mobile,
+      Business: v.businessName,
+      Address: v.address,
+      Status: v.status,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Vendors');
+    XLSX.writeFile(wb, 'vendors.xlsx');
+  };
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.autoTable({
+      head: [['Name','Mobile','Business','Address','Status']],
+      body: filtered.map(v =>
+        [v.name, v.mobile, v.businessName, v.address, v.status]
+      ),
+    });
+    doc.save('vendors.pdf');
+  };
+
+  // Table header (used in both Pending & Manage)
+  const header = (
+    <thead className="table-dark">
       <tr>
         <th>Name</th>
         <th>Mobile</th>
         <th>Business</th>
+        <th>Address</th>
         <th>Status</th>
         <th className="text-center">Actions</th>
       </tr>
     </thead>
   );
 
-  const renderVendorRow = (vendor) => (
-    <tr key={vendor._id}>
-      {editMode === vendor._id ? (
-        <>
-          <td><input className="form-control" name="name" value={editData.name} onChange={handleEditChange} placeholder="Enter name" /></td>
-          <td><input className="form-control" name="mobile" value={editData.mobile} onChange={handleEditChange} placeholder="Enter mobile" /></td>
-          <td><input className="form-control" name="businessName" value={editData.businessName} onChange={handleEditChange} placeholder="Enter business" /></td>
-          <td><span className={`badge ${vendor.status === 'approved' ? 'bg-success' : 'bg-warning'}`}>{vendor.status}</span></td>
-          <td className="text-center">
-            <div className="d-flex flex-wrap gap-2 justify-content-center">
-              <button className="btn btn-sm btn-success" onClick={handleSave}><FaSave className="me-1" />Save</button>
-              <button className="btn btn-sm btn-secondary" onClick={() => setEditMode(null)}>Cancel</button>
-            </div>
-          </td>
-        </>
-      ) : (
-        <>
-          <td>{vendor.name}</td>
-          <td>{vendor.mobile}</td>
-          <td>{vendor.businessName}</td>
-          <td><span className={`badge ${vendor.status === 'approved' ? 'bg-success' : 'bg-warning'}`}>{vendor.status}</span></td>
-          <td className="text-center">
-            <div className="d-flex flex-wrap gap-2 justify-content-center">
-              <button className="btn btn-sm btn-info" onClick={() => handleEdit(vendor)}><FaEdit className="me-1" />Edit</button>
-              <button className="btn btn-sm btn-danger" onClick={() => handleDelete(vendor._id)}><FaTrash className="me-1" />Delete</button>
-              <button className="btn btn-sm btn-secondary" onClick={() => handleSetPassword(vendor._id)}><FaKey className="me-1" />Password</button>
-            </div>
-          </td>
-        </>
-      )}
-    </tr>
-  );
-
   return (
     <div className="p-4">
+      {/* === Add Vendor === */}
       {section === 'add' && (
         <div className="card shadow mb-4">
-          <div className="card-header bg-warning text-dark fw-bold">Add New Vendor</div>
+          <div className="card-header bg-warning fw-bold">Add New Vendor</div>
           <div className="card-body">
             <form onSubmit={handleAddVendor}>
               <div className="row g-3">
-                {['name', 'mobile', 'businessName', 'password'].map((field, idx) => (
-                  <div className="col-md-6" key={idx}>
-                    <label className="form-label text-capitalize">{field}</label>
+                {['name','mobile','businessName','password','address'].map(f => (
+                  <div key={f} className="col-md-6">
+                    <label className="form-label text-capitalize">{f}</label>
                     <input
-                      type={field === 'password' ? 'password' : 'text'}
-                      name={field}
-                      value={newVendor[field]}
-                      onChange={handleInputChange}
+                      name={f}
+                      type={f==='password'?'password':'text'}
                       className="form-control"
-                      placeholder={`Enter ${field}`}
-                      required
+                      placeholder={`Enter ${f}`}
+                      value={newVendor[f]}
+                      onChange={handleInputChange}
+                      required={f!=='address'}
                     />
                   </div>
                 ))}
               </div>
-              <button type="submit" className="btn btn-success mt-4">Add Vendor</button>
+              <button className="btn btn-success mt-3">
+                <FaPlus className="me-1"/> Add Vendor
+              </button>
             </form>
           </div>
         </div>
       )}
 
-      {(section === 'all' || section === 'manage') && (
+      {/* === Pending Registrations === */}
+      {section === 'pending' && (
         <div className="card shadow mb-4">
-          <div className="card-header bg-warning text-dark fw-bold">
-            {section === 'all' ? 'All Vendors' : 'Manage Vendor Profiles'}
-          </div>
+          <div className="card-header bg-warning fw-bold">Pending Vendor Registrations</div>
           <div className="card-body table-responsive">
-            <table className="table table-bordered table-hover text-nowrap align-middle">
-              {renderTableHeader()}
-              <tbody>{vendors.map(renderVendorRow)}</tbody>
+            <table className="table table-bordered table-hover align-middle">
+              {header}
+              <tbody>
+                {vendors.filter(v => v.status==='pending').map(v => (
+                  <tr key={v._id}>
+                    <td>{v.name}</td>
+                    <td>{v.mobile}</td>
+                    <td>{v.businessName}</td>
+                    <td>{v.address || '—'}</td>
+                    <td><span className="badge bg-warning">Pending</span></td>
+                    <td className="text-center">
+                      <button className="btn btn-sm btn-success me-2" onClick={()=>handleApprove(v._id)}><FaCheck/></button>
+                      <button className="btn btn-sm btn-danger" onClick={()=>handleReject(v._id)}><FaTimes/></button>
+                    </td>
+                  </tr>
+                ))}
+                {vendors.filter(v => v.status==='pending').length===0 && (
+                  <tr><td colSpan="6" className="text-center text-muted">No pending registrations</td></tr>
+                )}
+              </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {section === 'pending' && (
+      {/* === Manage Profiles === */}
+      {section === 'manage' && (
         <div className="card shadow mb-4">
-          <div className="card-header bg-warning text-dark fw-bold">Pending Vendor Registrations</div>
-          <div className="card-body table-responsive">
-            <table className="table table-bordered table-hover text-nowrap align-middle">
-              {renderTableHeader()}
-              <tbody>
-                {vendors.filter(v => v.status === 'pending').map(vendor => (
-                  <tr key={vendor._id}>
-                    <td>{vendor.name}</td>
-                    <td>{vendor.mobile}</td>
-                    <td>{vendor.businessName}</td>
-                    <td><span className="badge bg-warning">Pending</span></td>
-                    <td className="text-center">
-                      <div className="d-flex flex-wrap gap-2 justify-content-center">
-                        <button className="btn btn-sm btn-success" onClick={() => handleApprove(vendor._id)}><FaCheck className="me-1" />Approve</button>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleReject(vendor._id)}><FaTimes className="me-1" />Reject</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="card-header bg-warning d-flex justify-content-between align-items-center">
+            <span>Manage Vendor Profiles</span>
+            <div className="d-flex gap-2">
+              <button className="btn btn-sm btn-success" onClick={exportExcel}><FaFileExcel className="me-1"/>Excel</button>
+              <button className="btn btn-sm btn-danger" onClick={exportPDF}><FaFilePdf className="me-1"/>PDF</button>
+            </div>
+          </div>
+          <div className="card-body">
+            <div className="mb-3 d-flex justify-content-between">
+              <div className="input-group w-50">
+                <span className="input-group-text"><FaSearch/></span>
+                <input
+                  className="form-control"
+                  placeholder="Search vendors..."
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+                />
+              </div>
+            </div>
+
+            <div className="table-responsive">
+              <table className="table table-bordered table-hover align-middle">
+                {header}
+                <tbody>
+                  {paginated.length>0 ? paginated.map(v => (
+                    <tr key={v._id}>
+                      {editMode===v._id ? (
+                        <>
+                          <td><input className="form-control" name="name"        value={editData.name}         onChange={handleEditChange}/></td>
+                          <td><input className="form-control" name="mobile"      value={editData.mobile}       onChange={handleEditChange}/></td>
+                          <td><input className="form-control" name="businessName"value={editData.businessName} onChange={handleEditChange}/></td>
+                          <td><input className="form-control" name="address"     value={editData.address}      onChange={handleEditChange} placeholder="Enter address"/></td>
+                          <td><span className={`badge ${v.status==='approved'?'bg-success':'bg-warning'}`}>{v.status}</span></td>
+                          <td className="text-center">
+                            <button className="btn btn-sm btn-success me-2" onClick={handleSave}><FaSave/></button>
+                            <button className="btn btn-sm btn-secondary" onClick={()=>setEditMode(null)}>Cancel</button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td>{v.name}</td>
+                          <td>{v.mobile}</td>
+                          <td>{v.businessName}</td>
+                          <td>{v.address || '—'}</td>  {/* Updated address always shows */}
+                          <td><span className={`badge ${v.status==='approved'?'bg-success':'bg-warning'}`}>{v.status}</span></td>
+                          <td className="text-center">
+                            <div className="d-flex flex-wrap gap-2 justify-content-center">
+                              <button className="btn btn-sm btn-info me-2"    onClick={()=>handleEdit(v)}><FaEdit/></button>
+                              <button className="btn btn-sm btn-danger me-2"  onClick={()=>handleDelete(v._id)}><FaTrash/></button>
+                              <button className="btn btn-sm btn-secondary"   onClick={()=>handleSetPassword(v._id)}><FaKey/></button>
+                            </div>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="6" className="text-center text-muted">No vendors found</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages>1 && (
+              <nav className="d-flex justify-content-end mt-3">
+                <ul className="pagination">
+                  <li className={`page-item ${currentPage===1?'disabled':''}`}>
+                    <button className="page-link" onClick={()=>setCurrentPage(p=>p-1)}>Previous</button>
+                  </li>
+                  {[...Array(totalPages)].map((_,i)=>(
+                    <li key={i} className={`page-item ${currentPage===i+1?'active':''}`}>
+                      <button className="page-link" onClick={()=>setCurrentPage(i+1)}>{i+1}</button>
+                    </li>
+                  ))}
+                  <li className={`page-item ${currentPage===totalPages?'disabled':''}`}>
+                    <button className="page-link" onClick={()=>setCurrentPage(p=>p+1)}>Next</button>
+                  </li>
+                </ul>
+              </nav>
+            )}
           </div>
         </div>
       )}

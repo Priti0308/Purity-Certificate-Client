@@ -2,7 +2,6 @@
 import React from 'react';
 import {
   FaUserPlus,
-  FaUsers,
   FaUserClock,
   FaUserEdit,
 } from 'react-icons/fa';
@@ -10,7 +9,6 @@ import {
 const AdminSidebar = ({ currentSection, setCurrentSection }) => {
   const menu = [
     { key: 'add', label: 'Add Vendor', icon: <FaUserPlus className="me-2" /> },
-    { key: 'all', label: 'All Vendors', icon: <FaUsers className="me-2" /> },
     { key: 'pending', label: 'Pending Registrations', icon: <FaUserClock className="me-2" /> },
     { key: 'manage', label: 'Manage Profiles', icon: <FaUserEdit className="me-2" /> },
   ];

@@ -7,6 +7,7 @@ import Navbar from './components/Navbar';
 
 // Pages
 import Home from './pages/Home';
+import Help from './pages/Help';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VendorDashboard from './pages/VendorDashboard';
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+        <Route path='/help' element={<Help/>}/>
         <Route path="/certificate" element={<Certificate />} />
         <Route path="/certificate-list" element={<CertificateList />} />
         <Route path="/admin-dashboard" element={<Dashboard />} />

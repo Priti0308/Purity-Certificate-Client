@@ -50,20 +50,29 @@ const Home = () => {
       </section>
 
       {/* Steps Section */}
-      <section className="container my-5">
-        <h2 className="text-center fw-bold mb-4" style={{ color: '#E78B48' }}>How It Works</h2>
-        <div className="row text-center">
-          {steps.map(([title, desc], i) => (
-            <div className="col-md-3 mb-4" key={i}>
-              <div className="border rounded shadow-sm p-4 h-100">
-                <h1 className="display-6 mb-2" style={{ color: '#F5C45E' }}>{i + 1}</h1>
-                <h6 className="fw-bold">{title}</h6>
-                <p className="mb-0">{desc}</p>
-              </div>
-            </div>
-          ))}
+<section className="container my-5">
+  <h2 className="text-center fw-bold mb-4" style={{ color: '#E78B48' }}>How It Works</h2>
+  <div className="row text-center">
+    {steps.map(([title, desc], i) => (
+      <div className="col-md-3 mb-4" key={i}>
+        <div
+          className="rounded shadow-sm p-4 h-100"
+          style={{
+            backgroundColor: '#102E50',
+            color: '#fff',
+            border: '1px solid #ccc',
+            transition: 'transform 0.3s ease'
+          }}
+        >
+          <h1 className="display-6 mb-2" style={{ color: '#F5C45E' }}>{i + 1}</h1>
+          <h6 className="fw-bold">{title}</h6>
+          <p className="mb-0">{desc}</p>
         </div>
-      </section>
+      </div>
+    ))}
+  </div>
+</section>
+
 
       {/* Call to Action */}
       <section className="text-center text-dark py-5" style={{ backgroundColor: '#F5C45E' }}>
