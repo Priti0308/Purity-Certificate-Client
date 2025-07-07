@@ -1,70 +1,92 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
-  FaUserCircle,
-  FaFileSignature,
-  FaListAlt,
-  FaCheckCircle,
-  FaHourglassHalf,
-  FaTimesCircle,
-  FaList,
-  FaPhone,
-  FaClock
+  FaUserCircle, FaFileSignature, FaListAlt,
+  FaCheckCircle, FaHourglassHalf, FaTimesCircle,
+  FaList, FaClock, FaEdit, FaSave
 } from 'react-icons/fa';
 
 const VendorDashboard = () => {
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    total: 0,
-    approved: 0,
-    pending: 0,
-    rejected: 0
-  });
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState({});
+  const [previewLogo, setPreviewLogo] = useState(null);
+  const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
   const [recentActivities, setRecentActivities] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const storedVendor = localStorage.getItem('vendor');
-        if (storedVendor) {
+        const token = localStorage.getItem('token');
+
+        if (storedVendor && token) {
           const vendorData = JSON.parse(storedVendor);
           setVendor(vendorData);
+          setEditData(vendorData);
+          if (vendorData.logo) setPreviewLogo(vendorData.logo);
 
-          // Fetch real-time statistics
-          const token = localStorage.getItem('token');
-          const response = await axios.get('https://purity-certificate-server.onrender.com/api/certificates/stats', {
+          const resStats = await axios.get('https://purity-certificate-server.onrender.com/api/certificates/stats', {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setStats(response.data);
+          setStats(resStats.data);
 
-          // Fetch recent activities
-          const activitiesResponse = await axios.get('https://purity-certificate-server.onrender.com/api/certificates/recent', {
+          const resRecent = await axios.get('https://purity-certificate-server.onrender.com/api/certificates/recent', {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setRecentActivities(activitiesResponse.data);
+          setRecentActivities(resRecent.data);
         }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+      } catch (err) {
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-    // Refresh data every 5 minutes
     const interval = setInterval(fetchData, 300000);
     return () => clearInterval(interval);
   }, []);
 
+  const handleInputChange = (e) => {
+    setEditData({ ...editData, [e.target.name]: e.target.value });
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditData((prev) => ({ ...prev, logo: reader.result }));
+        setPreviewLogo(reader.result);
+        alert("✅ Logo selected successfully.");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put('https://purity-certificate-server.onrender.com/api/vendors', editData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVendor(res.data);
+      localStorage.setItem('vendor', JSON.stringify(res.data));
+      setEditing(false);
+      alert('✅ Profile updated successfully.');
+    } catch (err) {
+      console.error(err);
+      alert('❌ Failed to update profile.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-vh-100 d-flex justify-content-center align-items-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+        <div className="spinner-border text-primary" role="status" />
       </div>
     );
   }
@@ -73,156 +95,140 @@ const VendorDashboard = () => {
     return (
       <div className="min-vh-100 d-flex flex-column justify-content-center align-items-center bg-light">
         <h4 className="text-danger mb-4">Access Denied: Please Log In</h4>
-        <Link to="/login" className="btn btn-primary px-4 py-2 rounded-pill shadow-sm">
-          Go to Login
-        </Link>
+        <Link to="/login" className="btn btn-primary px-4 py-2 rounded-pill shadow-sm">Go to Login</Link>
       </div>
     );
   }
 
   return (
     <div className="container-fluid py-4 px-4 bg-light min-vh-100">
-      <h2 className="text-center fw-bold text-primary mb-5">
-        Welcome to Your Dashboard
-      </h2>
+      <h2 className="text-center fw-bold text-primary mb-4">Welcome to Your Dashboard</h2>
 
       <div className="row g-4">
-        {/* Vendor Profile */}
+        {/* Profile Section */}
         <div className="col-md-4">
-          <div className="card shadow-sm border-0 h-100 rounded-3 overflow-hidden">
-            <div className="card-header bg-primary bg-gradient text-white py-3">
+          <div className="card shadow-sm border-0 rounded-4 h-100">
+            <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
               <div className="d-flex align-items-center">
-                <FaUserCircle className="me-2" size={24} />
-                <h5 className="mb-0">Business Profile</h5>
+                {(previewLogo || vendor.logo) && (
+                  <img
+                    src={previewLogo || vendor.logo}
+                    alt="Logo"
+                    className="rounded-circle border me-2"
+                    style={{ height: 40, width: 40, objectFit: 'cover' }}
+                  />
+                )}
+                <h5 className="mb-0"><FaUserCircle className="me-2" />Business Profile</h5>
               </div>
+              {!editing ? (
+                <button className="btn btn-sm btn-light" onClick={() => setEditing(true)}><FaEdit /></button>
+              ) : (
+                <button className="btn btn-sm btn-success" onClick={handleSave}><FaSave /></button>
+              )}
             </div>
-            <div className="card-body bg-white">
-              <div className="mb-3">
-                <small className="text-muted">Business Name</small>
-                <p className="fw-bold mb-2">{vendor.businessName}</p>
-              </div>
-              <div className="mb-3">
-                <small className="text-muted">Owner Name</small>
-                <p className="fw-bold mb-2">{vendor.name}</p>
-              </div>
-              <div className="contact-info bg-light p-3 rounded-3">
-                <h6 className="text-primary mb-3">Contact Information</h6>
-                <div className="d-flex align-items-center mb-2">
-                  <FaPhone className="text-muted me-2" />
-                  <p className="mb-0">{vendor.phone || 'N/A'}</p>
-                </div>
-              </div>
+            <div className="card-body">
+              <label className="form-label">Business Name</label>
+              <input type="text" name="businessName" disabled={!editing} className="form-control mb-3" value={editData.businessName} onChange={handleInputChange} />
+
+              <label className="form-label">Owner Name</label>
+              <input type="text" name="name" disabled={!editing} className="form-control mb-3" value={editData.name} onChange={handleInputChange} />
+
+              <label className="form-label">Mobile</label>
+              <input type="text" name="mobile" disabled={!editing} className="form-control mb-3" value={editData.mobile} onChange={handleInputChange} />
+
+              <label className="form-label">Address</label>
+              <input type="text" name="address" disabled={!editing} className="form-control mb-3" value={editData.address || ''} onChange={handleInputChange} />
+
+              <label className="form-label">Business Logo (Optional)</label>
+              <input type="file" accept="image/*" disabled={!editing} onChange={handleLogoChange} className="form-control" />
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions + Stats */}
         <div className="col-md-8">
           <div className="row g-4">
             <div className="col-md-6">
               <Link to="/certificate" className="text-decoration-none">
-                <div className="card shadow-sm border-0 bg-success bg-gradient text-white text-center p-4 h-100 rounded-3 hover-scale">
-                  <FaFileSignature size={40} className="mb-3 mx-auto" />
+                <div className="card bg-success text-white text-center p-4 h-100 hover-scale rounded-4">
+                  <FaFileSignature size={40} className="mb-3" />
                   <h5 className="fw-bold">New Certificate</h5>
-                  <p className="small mb-0 opacity-75">Create a new purity certificate</p>
+                  <p className="small opacity-75">Create a new purity certificate</p>
                 </div>
               </Link>
             </div>
             <div className="col-md-6">
               <Link to="/certificate-list" className="text-decoration-none">
-                <div className="card shadow-sm border-0 bg-warning bg-gradient text-dark text-center p-4 h-100 rounded-3 hover-scale">
-                  <FaListAlt size={40} className="mb-3 mx-auto" />
+                <div className="card bg-warning text-dark text-center p-4 h-100 hover-scale rounded-4">
+                  <FaListAlt size={40} className="mb-3" />
                   <h5 className="fw-bold">Certificate History</h5>
-                  <p className="small mb-0 opacity-75">View and manage your certificates</p>
+                  <p className="small opacity-75">View and manage your certificates</p>
                 </div>
               </Link>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Statistics Cards */}
-      <div className="row g-4 mt-4">
-        <div className="col-md-3">
-          <div className="card shadow-sm border-0 rounded-3 text-center p-4 bg-white hover-lift">
-            <FaList size={32} className="text-primary mb-3 mx-auto" />
-            <h6 className="text-muted mb-2">Total Certificates</h6>
-            <h3 className="fw-bold mb-0">{stats.total}</h3>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card shadow-sm border-0 rounded-3 text-center p-4 bg-white hover-lift">
-            <FaCheckCircle size={32} className="text-success mb-3 mx-auto" />
-            <h6 className="text-muted mb-2">Approved</h6>
-            <h3 className="fw-bold mb-0">{stats.approved}</h3>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card shadow-sm border-0 rounded-3 text-center p-4 bg-white hover-lift">
-            <FaHourglassHalf size={32} className="text-warning mb-3 mx-auto" />
-            <h6 className="text-muted mb-2">Pending</h6>
-            <h3 className="fw-bold mb-0">{stats.pending}</h3>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card shadow-sm border-0 rounded-3 text-center p-4 bg-white hover-lift">
-            <FaTimesCircle size={32} className="text-danger mb-3 mx-auto" />
-            <h6 className="text-muted mb-2">Rejected</h6>
-            <h3 className="fw-bold mb-0">{stats.rejected}</h3>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activities */}
-      <div className="row mt-4">
-        <div className="col-12">
-          <div className="card shadow-sm border-0 rounded-3">
-            <div className="card-header bg-white border-0 py-3">
-              <div className="d-flex align-items-center">
-                <FaClock className="text-primary me-2" />
-                <h5 className="mb-0">Recent Activities</h5>
+          {/* Stats Section */}
+          <div className="row g-4 mt-1">
+            {[
+              { label: 'Total Certificates', icon: <FaList />, color: 'primary', count: stats.total },
+              { label: 'Approved', icon: <FaCheckCircle />, color: 'success', count: stats.approved },
+              { label: 'Pending', icon: <FaHourglassHalf />, color: 'warning', count: stats.pending },
+              { label: 'Rejected', icon: <FaTimesCircle />, color: 'danger', count: stats.rejected },
+            ].map((item, idx) => (
+              <div className="col-md-6 col-lg-3" key={idx}>
+                <div className="card text-center p-4 shadow-sm hover-lift bg-white rounded-4">
+                  <div className={`text-${item.color} mb-3`}>{item.icon}</div>
+                  <h6 className="text-muted">{item.label}</h6>
+                  <h3 className="fw-bold">{item.count}</h3>
+                </div>
               </div>
+            ))}
+          </div>
+
+          {/* Recent Activities */}
+          <div className="card shadow-sm border-0 rounded-4 mt-4">
+            <div className="card-header bg-white border-0 py-3">
+              <h5><FaClock className="me-2 text-primary" />Recent Activities</h5>
             </div>
             <div className="card-body">
-              <div className="activity-timeline">
-                {recentActivities.map((activity, index) => (
-                  <div key={index} className="d-flex mb-3">
+              {recentActivities.length > 0 ? (
+                recentActivities.map((act, idx) => (
+                  <div key={idx} className="d-flex mb-3">
                     <div className="activity-dot"></div>
                     <div className="ms-3">
-                      <p className="mb-1 fw-bold">{activity.action}</p>
-                      <small className="text-muted">{new Date(activity.timestamp).toLocaleString()}</small>
+                      <p className="fw-bold mb-1">{act.action}</p>
+                      <small className="text-muted">{new Date(act.timestamp).toLocaleString()}</small>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              ) : (
+                <p className="text-muted">No recent activity</p>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      <style jsx>{`
-        .hover-scale {
-          transition: transform 0.2s ease;
-        }
+      <style>{`
         .hover-scale:hover {
           transform: scale(1.02);
-        }
-        .hover-lift {
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          transition: 0.2s;
         }
         .hover-lift:hover {
           transform: translateY(-5px);
-          box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+          box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
         }
-        .activity-timeline .activity-dot {
+        .activity-dot {
           width: 10px;
           height: 10px;
           border-radius: 50%;
-          background-color: var(--bs-primary);
+          background: var(--bs-primary);
           margin-top: 6px;
         }
       `}</style>
     </div>
   );
 };
+
 export default VendorDashboard;
