@@ -19,7 +19,7 @@ const Home = () => {
           <h1 className="fw-bold display-4 mb-3">Purity Certificate Portal</h1>
           <p className="lead mb-4">Trusted digital certificates for gold, sweets, and food businesses</p>
           <div className="d-flex justify-content-center flex-wrap gap-3">
-            <Link to="/register" className="btn btn-warning btn-lg">Vendor Register</Link>
+            {/* <Link to="/register" className="btn btn-warning btn-lg">Vendor Register</Link> */}
             <Link to="/login" className="btn btn-light text-dark btn-lg">Vendor Login</Link>
             <Link to="/admin-login" className="btn btn-outline-light btn-lg">Admin Login</Link>
           </div>
@@ -78,7 +78,7 @@ const Home = () => {
       <section className="text-center text-dark py-5" style={{ backgroundColor: '#F5C45E' }}>
         <h3 className="fw-bold mb-3">Start Issuing Trusted Certificates</h3>
         <p className="mb-4">Simple, secure, and professional.</p>
-        <Link to="/register" className="btn btn-dark btn-lg me-3">Register Now</Link>
+        {/* <Link to="/register" className="btn btn-dark btn-lg me-3">Register Now</Link> */}
         <Link to="/login" className="btn btn-outline-dark btn-lg">Login</Link>
       </section>
 

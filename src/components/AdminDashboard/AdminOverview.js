@@ -6,7 +6,7 @@ import {
 } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from'jspdf-autotable';
 
 const AdminOverview = ({ section }) => {
   const [vendors, setVendors] = useState([]);
@@ -87,6 +87,8 @@ const AdminOverview = ({ section }) => {
     }
   };
 
+  
+
   // --- Delete / Password Reset ---
   const handleDelete = async id => {
     if (window.confirm('Delete this vendor?')) {
@@ -130,15 +132,20 @@ const AdminOverview = ({ section }) => {
     XLSX.writeFile(wb, 'vendors.xlsx');
   };
   const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.autoTable({
-      head: [['Name','Mobile','Business','Address','Status']],
-      body: filtered.map(v =>
-        [v.name, v.mobile, v.businessName, v.address, v.status]
-      ),
-    });
-    doc.save('vendors.pdf');
-  };
+  const doc = new jsPDF();
+  autoTable(doc, {
+    head: [['Name', 'Mobile', 'Business', 'Address', 'Status']],
+    body: filtered.map(v => [
+      v.name,
+      v.mobile,
+      v.businessName,
+      v.address || '—',
+      v.status
+    ]),
+  });
+  doc.save('vendors.pdf');
+};
+
 
   // Table header (used in both Pending & Manage)
   const header = (

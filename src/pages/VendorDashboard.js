@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import {
-  FaUserCircle, FaFileSignature, FaListAlt,
+  FaFileSignature, FaListAlt,
   FaCheckCircle, FaHourglassHalf, FaTimesCircle,
   FaList, FaClock, FaEdit, FaSave
 } from 'react-icons/fa';
@@ -15,6 +15,7 @@ const VendorDashboard = () => {
   const [previewLogo, setPreviewLogo] = useState(null);
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
   const [recentActivities, setRecentActivities] = useState([]);
+
 
   // Load vendor and dashboard data
   useEffect(() => {
@@ -47,7 +48,7 @@ const VendorDashboard = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 300000); // Refresh every 5 min
+    const interval = setInterval(fetchData, 300000);
     return () => clearInterval(interval);
   }, []);
 
@@ -56,33 +57,59 @@ const VendorDashboard = () => {
   };
 
   const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditData((prev) => ({ ...prev, logo: reader.result }));
-        setPreviewLogo(reader.result);
-        alert("✅ Logo selected successfully.");
-      };
-      reader.readAsDataURL(file);
+  const file = e.target.files[0];
+  if (file) {
+    if (file.size > 200 * 1024) {
+      alert("❌ Please select an image smaller than 200KB.");
+      return;
     }
-  };
+
+    setEditData((prev) => ({ ...prev, logoFile: file }));
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewLogo(reader.result);
+      alert("✅ Logo selected successfully.");
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
 
   const handleSave = async () => {
-    try {
-      const token = localStorage.getItem('vendorToken');
-      const res = await axios.put('https://purity-certificate-server.onrender.com/api/vendors/me', editData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setVendor(res.data);
-      localStorage.setItem('vendor', JSON.stringify(res.data));
-      setEditing(false);
-      alert('✅ Profile updated successfully.');
-    } catch (err) {
-      console.error(err);
-      alert('❌ Failed to update profile.');
+  try {
+    const token = localStorage.getItem('vendorToken');
+    const formData = new FormData();
+
+    // Append all fields to FormData
+    for (const key in editData) {
+      if (editData[key]) {
+        formData.append(key, editData[key]);
+      }
     }
-  };
+
+    const res = await axios.put(
+      'https://purity-certificate-server.onrender.com/api/vendors/me',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+
+    setVendor(res.data);
+    localStorage.setItem('vendor', JSON.stringify(res.data));
+    setEditing(false);
+    alert('✅ Profile updated successfully.');
+  } catch (err) {
+    console.error(err);
+    alert('❌ Failed to update profile.');
+  }
+};
+
+
 
   if (loading) {
     return (
@@ -119,7 +146,7 @@ const VendorDashboard = () => {
                     style={{ height: 40, width: 40, objectFit: 'cover' }}
                   />
                 )}
-                <h5 className="mb-0"><FaUserCircle className="me-2" />Business Profile</h5>
+                <h5 className="mb-0">Business Profile</h5>
               </div>
               {!editing ? (
                 <button className="btn btn-sm btn-light" onClick={() => setEditing(true)}><FaEdit /></button>

@@ -1,38 +1,73 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { FaEye, FaFilePdf, FaTrash, FaSpinner, FaArrowLeft } from 'react-icons/fa';
+import {
+  FaEye,
+  FaFilePdf,
+  FaTrash,
+  FaSpinner,
+  FaArrowLeft,
+  FaCheck,
+  FaTimes,
+} from 'react-icons/fa';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 
 const CertificateList = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
 
-
-  const fetchCertificates = async () => {
+  const fetchCertificates = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
       const token = localStorage.getItem('vendorToken');
       const res = await axios.get('https://purity-certificate-server.onrender.com/api/certificates', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCertificates(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      setError('Failed to fetch certificates. Please try again.');
       console.error('Error fetching certificates:', err);
       setCertificates([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('vendorToken');
+      const res = await axios.get('https://purity-certificate-server.onrender.com/api/certificates/stats', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStats(res.data);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    }
+  }, []);
 
   useEffect(() => {
     fetchCertificates();
-  }, []);
+    fetchStats();
+  }, [fetchCertificates, fetchStats]);
+
+  const handleStatusChange = async (certId, status) => {
+    try {
+      const token = localStorage.getItem('vendorToken');
+      await axios.put(
+        `https://purity-certificate-server.onrender.com/api/certificates/${certId}`,
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(`Certificate ${status === 'approved' ? 'approved' : 'rejected'} successfully.`);
+      fetchCertificates();
+      fetchStats();
+    } catch (err) {
+      console.error(`Error updating certificate status to ${status}:`, err);
+      alert(`Failed to update certificate status to ${status}`);
+    }
+  };
 
   const handleView = (cert) => {
     const win = window.open('', '_blank');
@@ -41,9 +76,9 @@ const CertificateList = () => {
         <head>
           <title>Certificate ${cert.serialNo}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+            body { font-family: Arial; padding: 40px; max-width: 800px; margin: 0 auto; }
             .header { text-align: center; margin-bottom: 30px; }
-            .content { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+            .content { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
             .footer { text-align: right; margin-top: 30px; }
           </style>
         </head>
@@ -93,14 +128,14 @@ const CertificateList = () => {
       </div>
     `;
     document.body.appendChild(container);
-    
+
     try {
       const canvas = await html2canvas(container);
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF();
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
+
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`certificate_${cert.serialNo}.pdf`);
     } finally {
@@ -110,13 +145,15 @@ const CertificateList = () => {
 
   const handleDelete = async (certId) => {
     if (!window.confirm('Are you sure you want to delete this certificate?')) return;
-    
+
     try {
       const token = localStorage.getItem('vendorToken');
       await axios.delete(`https://purity-certificate-server.onrender.com/api/certificates/${certId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      await fetchCertificates();
+      alert('Certificate deleted successfully.');
+      fetchCertificates();
+      fetchStats();
     } catch (err) {
       console.error('Error deleting certificate:', err);
       alert('Failed to delete certificate. Please try again.');
@@ -132,28 +169,21 @@ const CertificateList = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="container py-5">
-        <div className="alert alert-danger" role="alert">{error}</div>
-      </div>
-    );
-  }
-
   return (
     <div className="container py-5">
-      
-      <h2 className="text-center text-primary fw-bold mb-4">
-        Certificate Management
-      </h2>
-      <div className="mb-3">
-        <button
-          className="btn btn-outline-secondary"
-          onClick={() => navigate(-1)} // Go back one step
-        >
+      <h2 className="text-center text-primary fw-bold mb-4">Certificate Management</h2>
+
+      <div className="mb-4 d-flex justify-content-between">
+        <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
           <FaArrowLeft className="me-2" />
           Back
         </button>
+        <div>
+          <span className="badge bg-primary me-2">Total: {stats.total}</span>
+          <span className="badge bg-success me-2">Approved: {stats.approved}</span>
+          <span className="badge bg-warning text-dark me-2">Pending: {stats.pending}</span>
+          <span className="badge bg-danger">Rejected: {stats.rejected}</span>
+        </div>
       </div>
 
       <div className="card shadow border-0">
@@ -161,14 +191,15 @@ const CertificateList = () => {
           <table className="table table-hover align-middle mb-0">
             <thead className="table-dark">
               <tr>
-                <th className="fw-semibold">Sr.No</th>
-                <th className="fw-semibold">Serial No</th>
-                <th className="fw-semibold">Name</th>
-                <th className="fw-semibold">Item</th>
-                <th className="fw-semibold">Fineness (%)</th>
-                <th className="fw-semibold">Weight (g)</th>
-                <th className="fw-semibold">Date</th>
-                <th className="fw-semibold text-center">Actions</th>
+                <th>#</th>
+                <th>Serial No</th>
+                <th>Name</th>
+                <th>Item</th>
+                <th>Fineness (%)</th>
+                <th>Weight (g)</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th className="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -183,11 +214,16 @@ const CertificateList = () => {
                     <td>{cert.grossWeight}</td>
                     <td>{new Date(cert.date).toLocaleDateString()}</td>
                     <td>
-                      <div className="d-flex gap-2 justify-content-center">
+                      <span className={`badge ${getStatusColor(cert.status)}`}>
+                        {cert.status || 'pending'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="d-flex flex-wrap gap-1 justify-content-center">
                         <button
                           className="btn btn-sm btn-outline-primary"
                           onClick={() => handleView(cert)}
-                          title="View Certificate"
+                          title="View"
                         >
                           <FaEye />
                         </button>
@@ -196,14 +232,28 @@ const CertificateList = () => {
                           onClick={() => handleGeneratePDF(cert)}
                           title="Download PDF"
                         >
-                          <FaFilePdf className="me-1" /> PDF
+                          <FaFilePdf />
                         </button>
                         <button
                           className="btn btn-sm btn-outline-danger"
                           onClick={() => handleDelete(cert._id)}
-                          title="Delete Certificate"
+                          title="Delete"
                         >
                           <FaTrash />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-success"
+                          onClick={() => handleStatusChange(cert._id, 'approved')}
+                          title="Approve"
+                        >
+                          <FaCheck />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-warning text-white"
+                          onClick={() => handleStatusChange(cert._id, 'rejected')}
+                          title="Reject"
+                        >
+                          <FaTimes />
                         </button>
                       </div>
                     </td>
@@ -211,7 +261,7 @@ const CertificateList = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center py-4 text-muted">
+                  <td colSpan="9" className="text-center py-4 text-muted">
                     No certificates found
                   </td>
                 </tr>
@@ -222,6 +272,19 @@ const CertificateList = () => {
       </div>
     </div>
   );
+};
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'approved':
+      return 'bg-success';
+    case 'pending':
+      return 'bg-warning text-dark';
+    case 'rejected':
+      return 'bg-danger';
+    default:
+      return 'bg-secondary';
+  }
 };
 
 export default CertificateList;
