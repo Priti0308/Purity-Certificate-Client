@@ -1,3 +1,4 @@
+// Certificate.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaDownload, FaEdit, FaArrowLeft } from 'react-icons/fa';
@@ -12,7 +13,7 @@ const Certificate = () => {
   const [metalType, setMetalType] = useState('Silver');
   const [certToDownload, setCertToDownload] = useState(null);
 
-  const [formData, setFormData] = useState({
+  const initialForm = {
     serialNo: '',
     name: '',
     item: '',
@@ -26,14 +27,16 @@ const Certificate = () => {
     address: '',
     phone: '',
     certificateTitle: '',
-  });
+  };
+
+  const [formData, setFormData] = useState(initialForm);
 
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
         const token = localStorage.getItem('vendorToken');
         const response = await axios.get('https://purity-certificate-server.onrender.com/api/certificates', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         setCertificates(response.data);
       } catch (error) {
@@ -63,12 +66,12 @@ const Certificate = () => {
       const payload = {
         ...formData,
         metalType,
-        certificateTitle: `${metalType.toUpperCase()} PURITY CERTIFICATE`
+        certificateTitle: `${metalType.toUpperCase()} PURITY CERTIFICATE`,
       };
 
       const headers = {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       };
 
       let response;
@@ -78,7 +81,9 @@ const Certificate = () => {
           payload,
           { headers }
         );
-        setCertificates(prev => prev.map(cert => cert._id === editId ? response.data : cert));
+        setCertificates((prev) =>
+          prev.map((cert) => (cert._id === editId ? response.data : cert))
+        );
         alert('✅ Certificate updated successfully.');
         setEditId(null);
       } else {
@@ -87,26 +92,15 @@ const Certificate = () => {
           payload,
           { headers }
         );
-        setCertificates(prev => [...prev, response.data]);
+        setCertificates((prev) => [...prev, response.data]);
         alert('✅ Certificate submitted successfully.');
       }
 
-      setFormData({
-        serialNo: '',
-        name: '',
-        item: '',
-        fineness: '',
-        grossWeight: '',
-        date: '',
-        leftImage: 'https://icon2.cleanpng.com/20180407/aqw/avbova9yv.webp',
-        rightImage: 'https://icon2.cleanpng.com/20180407/aqw/avbova9yv.webp',
-        headerTitle: '',
-        headerSubtitle: '',
-        address: '',
-        phone: '',
-        certificateTitle: '',
-      });
-      setMetalType('Silver');
+      // Delay reset to allow preview & user feedback
+      setTimeout(() => {
+        setFormData(initialForm);
+        setMetalType('Silver');
+      }, 1000);
     } catch (error) {
       console.error('Error saving certificate:', error);
       alert(error.response?.data?.message || '❌ Failed to save certificate.');
@@ -116,14 +110,14 @@ const Certificate = () => {
   const handleEdit = (cert) => {
     setEditId(cert._id);
     setFormData({ ...cert });
-    setMetalType(cert.certificateTitle.includes('SILVER') ? 'Silver' : 'Gold');
+    setMetalType(cert.certificateTitle?.includes('SILVER') ? 'Silver' : 'Gold');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDownloadPDF = async (cert) => {
     try {
       setCertToDownload(cert);
-      await new Promise(resolve => setTimeout(resolve, 300)); // Wait for render
+      await new Promise((resolve) => setTimeout(resolve, 700)); // Allow DOM render
 
       const preview = document.getElementById('download-preview');
       if (!preview) return alert('Preview not found.');
@@ -173,10 +167,10 @@ const Certificate = () => {
           />
           <div className="text-center">
             <div style={{ color: '#FF4500' }} className="fs-6">श्री गणेशाय नमः</div>
-            <h2 style={{ color: '#FF4500' }} className="fw-bold mb-1 fs-3">{cert.headerTitle}</h2>
-            <div className="fw-bold mb-1 fs-6">{cert.headerSubtitle}</div>
-            <div className="fs-6">{cert.address}</div>
-            <div className="fs-6">{cert.phone}</div>
+            <h2 style={{ color: '#FF4500' }} className="fw-bold mb-1 fs-3">{cert.headerTitle || ''}</h2>
+            <div className="fw-bold mb-1 fs-6">{cert.headerSubtitle || ''}</div>
+            <div className="fs-6">{cert.address || ''}</div>
+            <div className="fs-6">{cert.phone || ''}</div>
           </div>
           <img
             src={cert.rightImage}
@@ -195,24 +189,24 @@ const Certificate = () => {
         <div className="border border-dark rounded">
           <div className="d-flex border-bottom border-dark">
             <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Name</div>
-            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.name}</div>
+            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.name || ''}</div>
             <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>S.No</div>
-            <div className="p-2 bg-light fw-bold fs-5" style={{ width: '128px' }}>{cert.serialNo}</div>
+            <div className="p-2 bg-light fw-bold fs-5" style={{ width: '128px' }}>{cert.serialNo || ''}</div>
           </div>
           <div className="d-flex border-bottom border-dark">
             <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Item</div>
-            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.item}</div>
+            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.item || ''}</div>
             <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>Date</div>
-            <div className="p-2 bg-light fs-5" style={{ width: '128px' }}>{cert.date}</div>
+            <div className="p-2 bg-light fs-5" style={{ width: '128px' }}>{cert.date || ''}</div>
           </div>
           <div className="d-flex border-bottom border-dark">
             <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Fineness</div>
             <div className="p-2 border-end border-dark bg-light flex-grow-1">
-              <div className="fw-bold fs-4">{cert.fineness} %</div>
-              <div className="fs-6">{convertToWords(cert.fineness)} Percent</div>
+              <div className="fw-bold fs-4">{cert.fineness || ''} %</div>
+              <div className="fs-6">{convertToWords(cert.fineness || '0')} Percent</div>
             </div>
             <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>G.Wt</div>
-            <div className="p-2 bg-light" style={{ width: '128px' }}>{cert.grossWeight}</div>
+            <div className="p-2 bg-light" style={{ width: '128px' }}>{cert.grossWeight || ''}</div>
           </div>
           <div className="bg-light border-bottom border-dark">
             <div className="d-flex">
@@ -225,8 +219,8 @@ const Certificate = () => {
                 </div>
               </div>
               <div className="p-3 text-center" style={{ width: '256px' }}>
-                <div style={{ color: '#FF4500' }} className="fw-bold fs-6">For {cert.headerTitle}</div>
-                <div style={{ color: '#FF4500' }} className="fs-6 mt-2">Authorized by: {cert.name}</div>
+                <div style={{ color: '#FF4500' }} className="fw-bold fs-6">For {cert.headerTitle || ''}</div>
+                <div style={{ color: '#FF4500' }} className="fs-6 mt-2">Authorized by: {cert.name || ''}</div>
               </div>
             </div>
           </div>
@@ -236,11 +230,8 @@ const Certificate = () => {
   );
 
   return (
-    <div className="container py-4" style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
-      <button
-        className="btn btn-outline-secondary mb-3 d-flex align-items-center"
-        onClick={() => navigate(-1)}
-      >
+    <div className="container py-4">
+      <button className="btn btn-outline-secondary mb-3 d-flex align-items-center" onClick={() => navigate(-1)}>
         <FaArrowLeft className="me-2" /> Back
       </button>
 
@@ -259,16 +250,16 @@ const Certificate = () => {
               </div>
 
               {[
-                { name: 'headerTitle', placeholder: 'Company name (e.g. SWARANJALE)' },
-                { name: 'headerSubtitle', placeholder: 'Company description (e.g. Melting & Testing)' },
-                { name: 'address', placeholder: 'Complete business address with pincode' },
-                { name: 'phone', placeholder: 'Phone with prefix (e.g. Ph. : 044-42137629)' },
-                { name: 'serialNo', placeholder: 'Unique certificate number' },
-                { name: 'name', placeholder: 'Customer name' },
-                { name: 'item', placeholder: 'Item description (e.g. Silver Chain)' },
-                { name: 'fineness', placeholder: 'Purity percentage (e.g. 92.5)' },
-                { name: 'grossWeight', placeholder: 'Total weight in grams' },
-                { name: 'date', placeholder: 'Certificate date' },
+                { name: 'headerTitle', placeholder: 'Company name' },
+                { name: 'headerSubtitle', placeholder: 'Company subtitle' },
+                { name: 'address', placeholder: 'Business address' },
+                { name: 'phone', placeholder: 'Phone' },
+                { name: 'serialNo', placeholder: 'Serial No' },
+                { name: 'name', placeholder: 'Customer Name' },
+                { name: 'item', placeholder: 'Item name' },
+                { name: 'fineness', placeholder: 'Purity %' },
+                { name: 'grossWeight', placeholder: 'Weight in grams' },
+                { name: 'date', placeholder: 'Date' },
               ].map((field) => (
                 <div className="col-md-4" key={field.name}>
                   <label className="form-label">{field.name.replace(/([A-Z])/g, ' $1')}</label>
@@ -312,10 +303,12 @@ const Certificate = () => {
         </div>
       </div>
 
-      <div className="my-4">
-        <h5 className="text-center fw-bold">📄 Certificate Preview</h5>
-        <CertificatePreview cert={formData} />
-      </div>
+      {formData.name && formData.item && (
+        <div className="my-4">
+          <h5 className="text-center fw-bold">📄 Certificate Preview</h5>
+          <CertificatePreview cert={formData} />
+        </div>
+      )}
 
       <div className="card shadow mb-5">
         <div className="card-header bg-dark text-white fw-bold">Submitted Certificates</div>
