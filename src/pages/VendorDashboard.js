@@ -79,23 +79,32 @@ const VendorDashboard = () => {
   const handleSave = async () => {
   try {
     const token = localStorage.getItem('vendorToken');
-    const formData = new FormData();
 
-    // Append all fields to FormData
-    for (const key in editData) {
-      if (editData[key]) {
-        formData.append(key, editData[key]);
-      }
+    if (!editData._id) {
+      alert("❌ Vendor ID is missing. Please re-login.");
+      return;
+    }
+
+    const formData = new FormData();
+    // Add text fields
+    formData.append('name', editData.name || '');
+    formData.append('mobile', editData.mobile || '');
+    formData.append('businessName', editData.businessName || '');
+    formData.append('address', editData.address || '');
+
+    // Add logo file if it exists
+    if (editData.logoFile) {
+      formData.append('logo', editData.logoFile);
     }
 
     const res = await axios.put(
-      'https://purity-certificate-server.onrender.com/api/vendors/me',
+      `https://purity-certificate-server.onrender.com/api/vendors/me`,
       formData,
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       }
     );
 
@@ -104,11 +113,10 @@ const VendorDashboard = () => {
     setEditing(false);
     alert('✅ Profile updated successfully.');
   } catch (err) {
-    console.error(err);
-    alert('❌ Failed to update profile.');
+    console.error('Update error:', err);
+    alert(err.response?.data?.message || '❌ Failed to update profile.');
   }
 };
-
 
 
   if (loading) {

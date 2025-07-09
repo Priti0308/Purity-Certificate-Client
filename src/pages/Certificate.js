@@ -1,54 +1,48 @@
-// src/pages/Certificate.js
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import { FaDownload, FaEdit, FaArrowLeft } from "react-icons/fa";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaDownload, FaEdit, FaArrowLeft } from 'react-icons/fa';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import axios from 'axios';
 
 const Certificate = () => {
   const navigate = useNavigate();
   const [certificates, setCertificates] = useState([]);
   const [editId, setEditId] = useState(null);
+  const [metalType, setMetalType] = useState('Silver');
+  const [certToDownload, setCertToDownload] = useState(null);
 
   const [formData, setFormData] = useState({
-    serialNo: "",
-    name: "",
-    item: "",
-    fineness: "",
-    grossWeight: "",
-    date: "",
-    leftImage: "",
-    rightImage: "",
-    headerTitle: "",
-    headerSubtitle: "",
-    address: "",
-    phone: "",
-    certificateTitle: "",
+    serialNo: '',
+    name: '',
+    item: '',
+    fineness: '',
+    grossWeight: '',
+    date: '',
+    leftImage: 'https://icon2.cleanpng.com/20180407/aqw/avbova9yv.webp',
+    rightImage: 'https://icon2.cleanpng.com/20180407/aqw/avbova9yv.webp',
+    headerTitle: '',
+    headerSubtitle: '',
+    address: '',
+    phone: '',
+    certificateTitle: '',
   });
 
-  const fetchCertificates = useCallback(async () => {
-    const token = localStorage.getItem("vendorToken");
-    if (!token) {
-      alert("⚠️ Please login to access certificates.");
-      navigate("/vendor-login");
-      return;
-    }
-    try {
-      const res = await axios.get("https://purity-certificate-server.onrender.com/api/certificates", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCertificates(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("❌ Fetch error:", err);
-      alert("❌ Unauthorized access. Please login again.");
-      navigate("/vendor-login");
-    }
-  }, [navigate]);
-
   useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        const token = localStorage.getItem('vendorToken');
+        const response = await axios.get('https://purity-certificate-server.onrender.com/api/certificates', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setCertificates(response.data);
+      } catch (error) {
+        console.error('Error fetching certificates:', error);
+        alert('Failed to load certificates');
+      }
+    };
     fetchCertificates();
-  }, [fetchCertificates]);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,228 +51,325 @@ const Certificate = () => {
 
   const handleImageUpload = (e, side) => {
     const file = e.target.files[0];
-    if (file) {
-      const imageURL = URL.createObjectURL(file);
-      setFormData((prev) => ({ ...prev, [side]: imageURL }));
-    }
+    if (!file) return;
+    const imageURL = URL.createObjectURL(file);
+    setFormData((prev) => ({ ...prev, [side]: imageURL }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("vendorToken");
-    if (!token) {
-      alert("❌ Please login first.");
-      return navigate("/vendor-login");
-    }
-
     try {
-      const headers = { Authorization: `Bearer ${token}` };
+      const token = localStorage.getItem('vendorToken');
+      const payload = {
+        ...formData,
+        metalType,
+        certificateTitle: `${metalType.toUpperCase()} PURITY CERTIFICATE`
+      };
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      let response;
       if (editId) {
-        await axios.put(`https://purity-certificate-server.onrender.com/api/certificates/${editId}`, formData, { headers });
-        alert("✅ Certificate updated successfully.");
+        response = await axios.put(
+          `https://purity-certificate-server.onrender.com/api/certificates/${editId}`,
+          payload,
+          { headers }
+        );
+        setCertificates(prev => prev.map(cert => cert._id === editId ? response.data : cert));
+        alert('✅ Certificate updated successfully.');
         setEditId(null);
       } else {
-        await axios.post("https://purity-certificate-server.onrender.com/api/certificates", formData, { headers });
-        alert("✅ Certificate submitted successfully.");
+        response = await axios.post(
+          'https://purity-certificate-server.onrender.com/api/certificates',
+          payload,
+          { headers }
+        );
+        setCertificates(prev => [...prev, response.data]);
+        alert('✅ Certificate submitted successfully.');
       }
 
       setFormData({
-        serialNo: "",
-        name: "",
-        item: "",
-        fineness: "",
-        grossWeight: "",
-        date: "",
-        leftImage: "",
-        rightImage: "",
-        headerTitle: "",
-        headerSubtitle: "",
-        address: "",
-        phone: "",
-        certificateTitle: "",
+        serialNo: '',
+        name: '',
+        item: '',
+        fineness: '',
+        grossWeight: '',
+        date: '',
+        leftImage: 'https://icon2.cleanpng.com/20180407/aqw/avbova9yv.webp',
+        rightImage: 'https://icon2.cleanpng.com/20180407/aqw/avbova9yv.webp',
+        headerTitle: '',
+        headerSubtitle: '',
+        address: '',
+        phone: '',
+        certificateTitle: '',
       });
-
-      fetchCertificates();
-    } catch (err) {
-      console.error("Submit error:", err);
-      alert("❌ Submission failed. Try again.");
+      setMetalType('Silver');
+    } catch (error) {
+      console.error('Error saving certificate:', error);
+      alert(error.response?.data?.message || '❌ Failed to save certificate.');
     }
-  };
-
-  const convertToWords = (num) => {
-    if (!num || isNaN(num)) return "";
-    const map = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
-    const parts = num.toString().split(".");
-    const integer = parts[0].split("").map((d) => map[d] || "").join(" ");
-    const decimal = parts[1] ? parts[1].split("").map((d) => map[d] || "").join(" ") : "";
-    return `${integer}${decimal ? " Point " + decimal : ""}`;
-  };
-
-  const CertificatePreview = ({ cert }) => (
-    <div id="preview" style={{ padding: 30, width: "100%", maxWidth: 1122, margin: "0 auto", border: "2px solid black", fontFamily: "Arial" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <img src={cert.leftImage || ""} style={{ width: 70, height: 70 }} alt="left" />
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 12 }}>Sri Ganeshaya Namaha</div>
-          <h2 style={{ margin: 4, color: "#d9534f" }}>{cert.headerTitle || "SWARANJALE"}</h2>
-          <div style={{ fontSize: 13 }}>{cert.headerSubtitle || "Melting & Testing"}</div>
-          <div style={{ fontSize: 11 }}>{cert.address}</div>
-          <div style={{ fontSize: 11 }}>{cert.phone}</div>
-        </div>
-        <img src={cert.rightImage || ""} style={{ width: 70, height: 70 }} alt="right" />
-      </div>
-
-      <div style={{ textAlign: "center", margin: "20px 0" }}>
-        <span style={{ backgroundColor: "yellow", padding: "6px 25px", fontSize: 16, fontWeight: "bold", border: "1px solid black" }}>
-          {cert.certificateTitle || "PURITY CERTIFICATE"}
-        </span>
-      </div>
-
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }} border="1">
-        <tbody>
-          <tr><td><strong>Name</strong></td><td>{cert.name}</td><td><strong>S.No</strong></td><td>{cert.serialNo}</td></tr>
-          <tr><td><strong>Item</strong></td><td>{cert.item}</td><td><strong>Date</strong></td><td>{cert.date}</td></tr>
-          <tr><td><strong>Fineness</strong></td><td>{cert.fineness} %</td><td><strong>G.Wt</strong></td><td>{cert.grossWeight}</td></tr>
-          <tr><td><strong>In Words</strong></td><td colSpan="3">{convertToWords(cert.fineness)} Percent</td></tr>
-        </tbody>
-      </table>
-
-      <div style={{ marginTop: 15, fontSize: 13 }}>
-        <strong>Note:</strong>
-        <ul style={{ paddingLeft: 18 }}>
-          <li>We are not responsible for any melting defects</li>
-          <li>We are responsible for more than 0.50% difference</li>
-          <li>If any doubt ask for re-testing</li>
-        </ul>
-      </div>
-
-      <div style={{ textAlign: "right", marginTop: 40 }}>
-        <strong>For {cert.headerTitle || "SWARANJALE"}</strong>
-      </div>
-    </div>
-  );
-
-  const handleDownloadPDF = async (cert) => {
-    const preview = document.getElementById("preview");
-    if (!preview) return alert("Preview not found.");
-
-    const canvas = await html2canvas(preview, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("landscape", "mm", "a4");
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
-    pdf.addImage(imgData, "PNG", 0, 0, width, height);
-    pdf.save(`certificate_${cert.serialNo}.pdf`);
   };
 
   const handleEdit = (cert) => {
     setEditId(cert._id);
     setFormData({ ...cert });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setMetalType(cert.certificateTitle.includes('SILVER') ? 'Silver' : 'Gold');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleDownloadPDF = async (cert) => {
+    try {
+      setCertToDownload(cert);
+      await new Promise(resolve => setTimeout(resolve, 300)); // Wait for render
+
+      const preview = document.getElementById('download-preview');
+      if (!preview) return alert('Preview not found.');
+
+      const canvas = await html2canvas(preview, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = 210;
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`certificate_${cert.serialNo}.pdf`);
+      setCertToDownload(null);
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      alert('Failed to process certificate');
+    }
+  };
+
+  const convertToWords = (num) => {
+    if (!num || isNaN(num)) return '';
+    const map = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const parts = num.toString().split('.');
+    const integer = parts[0].split('').map((d) => map[d]).join(' ');
+    const decimal = parts[1] ? parts[1].split('').map((d) => map[d]).join(' ') : '';
+    return `${integer}${decimal ? ' Point ' + decimal : ''}`;
+  };
+
+  const CertificatePreview = ({ cert }) => (
+    <div
+      className="card mx-auto"
+      style={{
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '12px',
+        maxWidth: '816px',
+        border: '2px solid #000',
+      }}
+    >
+      <div className="card-body p-4">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <img
+            src={cert.leftImage}
+            className="img-fluid"
+            style={{ width: '64px', height: '64px', border: '1.5px solid #DC2626', objectFit: 'contain' }}
+            alt="left"
+          />
+          <div className="text-center">
+            <div style={{ color: '#FF4500' }} className="fs-6">श्री गणेशाय नमः</div>
+            <h2 style={{ color: '#FF4500' }} className="fw-bold mb-1 fs-3">{cert.headerTitle}</h2>
+            <div className="fw-bold mb-1 fs-6">{cert.headerSubtitle}</div>
+            <div className="fs-6">{cert.address}</div>
+            <div className="fs-6">{cert.phone}</div>
+          </div>
+          <img
+            src={cert.rightImage}
+            className="img-fluid"
+            style={{ width: '64px', height: '64px', border: '1.5px solid #DC2626', objectFit: 'contain' }}
+            alt="right"
+          />
+        </div>
+
+        <div className="text-center my-4">
+          <span className="badge" style={{ backgroundColor: '#FF4500', color: '#fff', padding: '6px 12px' }}>
+            {cert.certificateTitle || 'SILVER PURITY CERTIFICATE'}
+          </span>
+        </div>
+
+        <div className="border border-dark rounded">
+          <div className="d-flex border-bottom border-dark">
+            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Name</div>
+            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.name}</div>
+            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>S.No</div>
+            <div className="p-2 bg-light fw-bold fs-5" style={{ width: '128px' }}>{cert.serialNo}</div>
+          </div>
+          <div className="d-flex border-bottom border-dark">
+            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Item</div>
+            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.item}</div>
+            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>Date</div>
+            <div className="p-2 bg-light fs-5" style={{ width: '128px' }}>{cert.date}</div>
+          </div>
+          <div className="d-flex border-bottom border-dark">
+            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Fineness</div>
+            <div className="p-2 border-end border-dark bg-light flex-grow-1">
+              <div className="fw-bold fs-4">{cert.fineness} %</div>
+              <div className="fs-6">{convertToWords(cert.fineness)} Percent</div>
+            </div>
+            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>G.Wt</div>
+            <div className="p-2 bg-light" style={{ width: '128px' }}>{cert.grossWeight}</div>
+          </div>
+          <div className="bg-light border-bottom border-dark">
+            <div className="d-flex">
+              <div className="flex-grow-1 p-3 border-end border-dark">
+                <div style={{ color: '#FF4500' }} className="fw-bold fs-6 mb-2">Note</div>
+                <div className="fs-6">
+                  <div>- We are not responsible for any melting defects</div>
+                  <div>- We are responsible for more than 0.50% difference</div>
+                  <div>- If any doubt ask for re-testing</div>
+                </div>
+              </div>
+              <div className="p-3 text-center" style={{ width: '256px' }}>
+                <div style={{ color: '#FF4500' }} className="fw-bold fs-6">For {cert.headerTitle}</div>
+                <div style={{ color: '#FF4500' }} className="fs-6 mt-2">Authorized by: {cert.name}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="container py-4">
-      <div className="mb-3">
-        <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
-          <FaArrowLeft className="me-2" /> Back
-        </button>
+    <div className="container py-4" style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
+      <button
+        className="btn btn-outline-secondary mb-3 d-flex align-items-center"
+        onClick={() => navigate(-1)}
+      >
+        <FaArrowLeft className="me-2" /> Back
+      </button>
+
+      <h3 className="text-center text-danger mb-4">{editId ? 'Edit' : 'Create'} Purity Certificate</h3>
+
+      <div className="card shadow mb-5">
+        <div className="card-body">
+          <form onSubmit={handleSubmit}>
+            <div className="row g-3">
+              <div className="col-md-4">
+                <label className="form-label">Metal Type</label>
+                <select className="form-select" value={metalType} onChange={(e) => setMetalType(e.target.value)}>
+                  <option value="Silver">Silver</option>
+                  <option value="Gold">Gold</option>
+                </select>
+              </div>
+
+              {[
+                { name: 'headerTitle', placeholder: 'Company name (e.g. SWARANJALE)' },
+                { name: 'headerSubtitle', placeholder: 'Company description (e.g. Melting & Testing)' },
+                { name: 'address', placeholder: 'Complete business address with pincode' },
+                { name: 'phone', placeholder: 'Phone with prefix (e.g. Ph. : 044-42137629)' },
+                { name: 'serialNo', placeholder: 'Unique certificate number' },
+                { name: 'name', placeholder: 'Customer name' },
+                { name: 'item', placeholder: 'Item description (e.g. Silver Chain)' },
+                { name: 'fineness', placeholder: 'Purity percentage (e.g. 92.5)' },
+                { name: 'grossWeight', placeholder: 'Total weight in grams' },
+                { name: 'date', placeholder: 'Certificate date' },
+              ].map((field) => (
+                <div className="col-md-4" key={field.name}>
+                  <label className="form-label">{field.name.replace(/([A-Z])/g, ' $1')}</label>
+                  <input
+                    type={field.name === 'date' ? 'date' : 'text'}
+                    name={field.name}
+                    className="form-control"
+                    value={formData[field.name]}
+                    onChange={handleChange}
+                    placeholder={field.placeholder}
+                    required
+                  />
+                </div>
+              ))}
+
+              <div className="col-md-6">
+                <label className="form-label">Left Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="form-control"
+                  onChange={(e) => handleImageUpload(e, 'leftImage')}
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Right Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="form-control"
+                  onChange={(e) => handleImageUpload(e, 'rightImage')}
+                />
+              </div>
+            </div>
+            <div className="text-end mt-4">
+              <button type="submit" className="btn btn-success">
+                {editId ? 'Update' : 'Submit'} Certificate
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <h3 className="text-center text-primary mb-4">{editId ? "Edit" : "Create"} Purity Certificate</h3>
-
-      <form onSubmit={handleSubmit} className="card shadow p-4 mb-5">
-        <div className="row g-3">
-          {[
-            ["Header Title", "headerTitle"],
-            ["Subtitle", "headerSubtitle"],
-            ["Address", "address"],
-            ["Phone", "phone"],
-            ["Certificate Title", "certificateTitle"],
-            ["Serial No", "serialNo"],
-            ["Customer Name", "name"],
-            ["Item", "item"],
-            ["Fineness (%)", "fineness"],
-            ["Gross Weight (g)", "grossWeight"],
-            ["Date", "date", "date"]
-          ].map(([label, name, type]) => (
-            <div className="col-md-4" key={name}>
-              <label className="form-label">{label}</label>
-              <input
-                type={type || "text"}
-                name={name}
-                className="form-control"
-                value={formData[name]}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          ))}
-
-          <div className="col-md-6">
-            <label className="form-label">Left Image (optional)</label>
-            <input type="file" accept="image/*" className="form-control" onChange={(e) => handleImageUpload(e, "leftImage")} />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Right Image (optional)</label>
-            <input type="file" accept="image/*" className="form-control" onChange={(e) => handleImageUpload(e, "rightImage")} />
-          </div>
-        </div>
-
-        <div className="text-end mt-4">
-          <button type="submit" className="btn btn-success">{editId ? "Update" : "Submit"} Certificate</button>
-        </div>
-      </form>
-
-      {/* Preview Certificate */}
       <div className="my-4">
-        <h5 className="text-center">📄 Certificate Preview</h5>
+        <h5 className="text-center fw-bold">📄 Certificate Preview</h5>
         <CertificatePreview cert={formData} />
       </div>
 
-      {/* Certificate Table */}
-      <div className="card shadow">
+      <div className="card shadow mb-5">
         <div className="card-header bg-dark text-white fw-bold">Submitted Certificates</div>
-        <div className="card-body table-responsive">
-          <table className="table table-bordered">
-            <thead className="table-light">
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Item</th>
-                <th>Fineness</th>
-                <th>Weight</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {certificates.length === 0 ? (
-                <tr><td colSpan="7" className="text-center text-muted">No certificates found.</td></tr>
-              ) : (
-                certificates.map((cert, idx) => (
-                  <tr key={cert._id}>
-                    <td>{idx + 1}</td>
-                    <td>{cert.name}</td>
-                    <td>{cert.item}</td>
-                    <td>{cert.fineness}%</td>
-                    <td>{cert.grossWeight}</td>
-                    <td>{cert.date}</td>
-                    <td className="d-flex gap-2 flex-wrap">
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDownloadPDF(cert)}>
-                        <FaDownload className="me-1" /> PDF
-                      </button>
-                      <button className="btn btn-sm btn-primary" onClick={() => handleEdit(cert)}>
-                        <FaEdit className="me-1" /> Edit
-                      </button>
-                    </td>
+        <div className="card-body">
+          <div className="table-responsive">
+            <table className="table table-bordered">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Item</th>
+                  <th>Fineness</th>
+                  <th>Weight</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {certificates.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="text-center text-muted">No certificates found.</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  certificates.map((cert, idx) => (
+                    <tr key={cert._id}>
+                      <td>{idx + 1}</td>
+                      <td>{cert.name}</td>
+                      <td>{cert.item}</td>
+                      <td>{cert.fineness}%</td>
+                      <td>{cert.grossWeight}</td>
+                      <td>{cert.date}</td>
+                      <td className="d-flex gap-2 flex-wrap">
+                        <button className="btn btn-sm btn-danger" onClick={() => handleDownloadPDF(cert)}>
+                          <FaDownload className="me-1" /> PDF
+                        </button>
+                        <button className="btn btn-sm btn-primary" onClick={() => handleEdit(cert)}>
+                          <FaEdit className="me-1" /> Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+
+      {/* Hidden preview for PDF download */}
+      {certToDownload && (
+        <div id="download-preview" style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+          <CertificatePreview cert={certToDownload} />
+        </div>
+      )}
     </div>
   );
 };

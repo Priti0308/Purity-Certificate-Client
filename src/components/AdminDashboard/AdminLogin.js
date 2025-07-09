@@ -12,7 +12,7 @@ const AdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://purity-certificate-server.onrender.com/api/admin/login', {
+      const res = await axios.post('http://localhost:5000/api/admin/login', {
         username,
         password,
       });
@@ -20,7 +20,7 @@ const AdminLogin = () => {
       alert(res.data.message || 'Admin login successful');
       localStorage.setItem('admin', JSON.stringify(res.data.admin));
       navigate('/admin-dashboard');
-      // Redirect or next steps here
+  
     } catch (error) {
       alert(error.response?.data?.message || 'Login failed');
     }

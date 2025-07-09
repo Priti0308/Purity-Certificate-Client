@@ -1,4 +1,3 @@
-// src/pages/Login.js
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +10,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('https://purity-certificate-server.onrender.com/api/vendors/login', {
+      const response = await axios.post('http://localhost:5000/api/vendors/login', {
         mobile,
         password,
       });

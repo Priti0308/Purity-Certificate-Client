@@ -28,7 +28,7 @@ const Home = () => {
 
       {/* Highlights Section */}
       <section className="container my-5">
-        <h2 className="text-center fw-bold mb-4" style={{ color: '#F5C45E' }}>Platform Highlights</h2>
+        <h2 className="text-center fw-bold mb-4" style={{ color: '#E78B48' }}>Platform Highlights</h2>
         <div className="row g-4">
           {[
             { title: 'Digital Certificates', text: 'Generate barcoded & verified certificates', icon: <FaCertificate />, bg: '#E78B48', color: '#fff' },
