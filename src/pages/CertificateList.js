@@ -18,7 +18,6 @@ const CertificateList = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
-  const [certToDownload, setCertToDownload] = useState(null);
 
   const fetchCertificates = useCallback(async () => {
     try {
@@ -70,24 +69,83 @@ const CertificateList = () => {
     }
   };
 
+  const handleView = (cert) => {
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html>
+        <head>
+          <title>Certificate ${cert.serialNo}</title>
+          <style>
+            body { font-family: Arial; padding: 40px; max-width: 800px; margin: 0 auto; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .content { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+            .footer { text-align: right; margin-top: 30px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2 style="color: #2c3e50;">SWARANJALE</h2>
+            <h3 style="color: #34495e;">Purity Certificate</h3>
+          </div>
+          <div class="content">
+            <p><strong>Serial No:</strong> ${cert.serialNo}</p>
+            <p><strong>Name:</strong> ${cert.name}</p>
+            <p><strong>Item:</strong> ${cert.item}</p>
+            <p><strong>Fineness:</strong> ${cert.fineness}%</p>
+            <p><strong>Weight:</strong> ${cert.grossWeight} g</p>
+            <p><strong>Date:</strong> ${cert.date}</p>
+            ${cert.notes ? `<p><strong>Notes:</strong> ${cert.notes}</p>` : ''}
+          </div>
+          <div class="footer">
+            <p>For SWARANJALE</p>
+          </div>
+        </body>
+      </html>
+    `);
+    win.document.close();
+  };
+
   const handleGeneratePDF = async (cert) => {
-    setCertToDownload(cert);
-    await new Promise((res) => setTimeout(res, 500));
-    const preview = document.getElementById('download-preview');
-    if (!preview) return alert('Preview not found.');
-    const canvas = await html2canvas(preview, { scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = 210;
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`certificate_${cert.serialNo}.pdf`);
-    setCertToDownload(null);
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div style="padding: 20px; font-family: Arial;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #2c3e50;">SWARANJALE</h2>
+          <h3 style="color: #34495e;">Purity Certificate</h3>
+        </div>
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+          <p><strong>Serial No:</strong> ${cert.serialNo}</p>
+          <p><strong>Name:</strong> ${cert.name}</p>
+          <p><strong>Item:</strong> ${cert.item}</p>
+          <p><strong>Fineness:</strong> ${cert.fineness}%</p>
+          <p><strong>Weight:</strong> ${cert.grossWeight} g</p>
+          <p><strong>Date:</strong> ${cert.date}</p>
+          ${cert.notes ? `<p><strong>Notes:</strong> ${cert.notes}</p>` : ''}
+        </div>
+        <div style="text-align: right; margin-top: 20px;">
+          <p>For SWARANJALE</p>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    try {
+      const canvas = await html2canvas(container);
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF();
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`certificate_${cert.serialNo}.pdf`);
+    } finally {
+      document.body.removeChild(container);
+    }
   };
 
   const handleDelete = async (certId) => {
     if (!window.confirm('Are you sure you want to delete this certificate?')) return;
+
     try {
       const token = localStorage.getItem('vendorToken');
       await axios.delete(`https://purity-certificate-server.onrender.com/api/certificates/${certId}`, {
@@ -102,86 +160,30 @@ const CertificateList = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'approved': return 'bg-success';
-      case 'pending': return 'bg-warning text-dark';
-      case 'rejected': return 'bg-danger';
-      default: return 'bg-secondary';
-    }
-  };
-
-  const CertificatePreview = ({ cert }) => (
-    <div className="card mx-auto" style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', maxWidth: '816px', border: '2px solid #000' }}>
-      <div className="card-body p-4">
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <img src={cert.leftImage} style={{ width: '64px', height: '64px', border: '1.5px solid #FFD700' }} alt="left" />
-          <div className="text-center">
-            <div style={{ color: '#FF4500' }}>श्री गणेशाय नमः</div>
-            <h2 style={{ color: '#FF4500' }} className="fw-bold mb-1 fs-3">{cert.headerTitle}</h2>
-            <div className="fw-bold mb-1 fs-6">{cert.headerSubtitle}</div>
-            <div className="fs-6">{cert.address}</div>
-            <div className="fs-6">{cert.phone}</div>
-          </div>
-          <img src={cert.rightImage} style={{ width: '64px', height: '64px', border: '1.5px solid #FFD700' }} alt="right" />
-        </div>
-        <div className="text-center my-4">
-          <span className="badge" style={{ backgroundColor: '#FF4500', color: '#fff' }}>{cert.certificateTitle || 'SILVER PURITY CERTIFICATE'}</span>
-        </div>
-        <div className="border border-dark rounded">
-          <div className="d-flex border-bottom border-dark">
-            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Name</div>
-            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.name}</div>
-            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>S.No</div>
-            <div className="p-2 bg-light fw-bold fs-5" style={{ width: '128px' }}>{cert.serialNo}</div>
-          </div>
-          <div className="d-flex border-bottom border-dark">
-            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Item</div>
-            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.item}</div>
-            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>Date</div>
-            <div className="p-2 bg-light fs-5" style={{ width: '128px' }}>{cert.date}</div>
-          </div>
-          <div className="d-flex border-bottom border-dark">
-            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Fineness</div>
-            <div className="p-2 border-end border-dark bg-light flex-grow-1">
-              <div className="fw-bold fs-4">{cert.fineness} %</div>
-            </div>
-            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>G.Wt</div>
-            <div className="p-2 bg-light" style={{ width: '128px' }}>{cert.grossWeight}</div>
-          </div>
-          <div className="bg-light border-bottom border-dark">
-            <div className="d-flex">
-              <div className="flex-grow-1 p-3 border-end border-dark">
-                <div style={{ color: '#FF4500' }} className="fw-bold fs-6 mb-2">Note</div>
-                <div className="fs-6">
-                  <div>- We are not responsible for any melting defects</div>
-                  <div>- We are responsible for more than 0.50% difference</div>
-                  <div>- If any doubt ask for re-testing</div>
-                </div>
-              </div>
-              <div className="p-3 text-center" style={{ width: '256px' }}>
-                <div style={{ color: '#FF4500' }} className="fw-bold fs-6">For {cert.headerTitle}</div>
-                <div style={{ color: '#FF4500' }} className="fs-6 mt-2">Authorized by: {cert.name}</div>
-              </div>
-            </div>
-          </div>
-        </div>
+  if (loading) {
+    return (
+      <div className="container py-5 text-center">
+        <FaSpinner className="spinner-border text-primary" role="status" />
+        <p className="mt-2">Loading certificates...</p>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="container py-5">
-      <button className="btn btn-outline-secondary mb-3" onClick={() => navigate(-1)}>
-        <FaArrowLeft className="me-2" /> Back
-      </button>
       <h2 className="text-center text-primary fw-bold mb-4">Certificate Management</h2>
 
-      <div className="mb-4 d-flex justify-content-end">
-        <span className="badge bg-primary me-2">Total: {stats.total}</span>
-        <span className="badge bg-success me-2">Approved: {stats.approved}</span>
-        <span className="badge bg-warning text-dark me-2">Pending: {stats.pending}</span>
-        <span className="badge bg-danger">Rejected: {stats.rejected}</span>
+      <div className="mb-4 d-flex justify-content-between">
+        <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
+          <FaArrowLeft className="me-2" />
+          Back
+        </button>
+        <div>
+          <span className="badge bg-primary me-2">Total: {stats.total}</span>
+          <span className="badge bg-success me-2">Approved: {stats.approved}</span>
+          <span className="badge bg-warning text-dark me-2">Pending: {stats.pending}</span>
+          <span className="badge bg-danger">Rejected: {stats.rejected}</span>
+        </div>
       </div>
 
       <div className="card shadow border-0">
@@ -201,37 +203,88 @@ const CertificateList = () => {
               </tr>
             </thead>
             <tbody>
-              {certificates.map((cert, idx) => (
-                <tr key={cert._id || idx}>
-                  <td>{idx + 1}</td>
-                  <td>{cert.serialNo}</td>
-                  <td>{cert.name}</td>
-                  <td>{cert.item}</td>
-                  <td>{cert.fineness}</td>
-                  <td>{cert.grossWeight}</td>
-                  <td>{new Date(cert.date).toLocaleDateString()}</td>
-                  <td><span className={`badge ${getStatusColor(cert.status)}`}>{cert.status || 'pending'}</span></td>
-                  <td className="d-flex flex-wrap gap-1 justify-content-center">
-                    <button className="btn btn-sm btn-outline-primary" onClick={() => setCertToDownload(cert)} title="View"><FaEye /></button>
-                    <button className="btn btn-sm btn-danger" onClick={() => handleGeneratePDF(cert)} title="Download PDF"><FaFilePdf /></button>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(cert._id)} title="Delete"><FaTrash /></button>
-                    <button className="btn btn-sm btn-success" onClick={() => handleStatusChange(cert._id, 'approved')} title="Approve"><FaCheck /></button>
-                    <button className="btn btn-sm btn-warning text-white" onClick={() => handleStatusChange(cert._id, 'rejected')} title="Reject"><FaTimes /></button>
+              {certificates.length > 0 ? (
+                certificates.map((cert, idx) => (
+                  <tr key={cert._id || idx}>
+                    <td>{idx + 1}</td>
+                    <td>{cert.serialNo}</td>
+                    <td>{cert.name}</td>
+                    <td>{cert.item}</td>
+                    <td>{cert.fineness}</td>
+                    <td>{cert.grossWeight}</td>
+                    <td>{new Date(cert.date).toLocaleDateString()}</td>
+                    <td>
+                      <span className={`badge ${getStatusColor(cert.status)}`}>
+                        {cert.status || 'pending'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="d-flex flex-wrap gap-1 justify-content-center">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleView(cert)}
+                          title="View"
+                        >
+                          <FaEye />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleGeneratePDF(cert)}
+                          title="Download PDF"
+                        >
+                          <FaFilePdf />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(cert._id)}
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-success"
+                          onClick={() => handleStatusChange(cert._id, 'approved')}
+                          title="Approve"
+                        >
+                          <FaCheck />
+                        </button>
+                        <button
+                          className="btn btn-sm btn-warning text-white"
+                          onClick={() => handleStatusChange(cert._id, 'rejected')}
+                          title="Reject"
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="9" className="text-center py-4 text-muted">
+                    No certificates found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </div>
-
-      {certToDownload && (
-        <div id="download-preview" style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-          <CertificatePreview cert={certToDownload} />
-        </div>
-      )}
     </div>
   );
+};
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'approved':
+      return 'bg-success';
+    case 'pending':
+      return 'bg-warning text-dark';
+    case 'rejected':
+      return 'bg-danger';
+    default:
+      return 'bg-secondary';
+  }
 };
 
 export default CertificateList;
