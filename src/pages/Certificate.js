@@ -181,7 +181,7 @@ const Certificate = () => {
         </div>
 
         <div className="text-center my-4">
-          <span className="badge" style={{ backgroundColor: '#FF4500', color: '#fff', padding: '6px 12px' }}>
+          <span className="badge" style={{ backgroundColor: '#FFFF00', color: '#fff', padding: '6px 12px' }}>
             {cert.certificateTitle || 'SILVER PURITY CERTIFICATE'}
           </span>
         </div>
