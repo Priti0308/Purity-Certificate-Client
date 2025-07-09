@@ -1,4 +1,3 @@
-// Certificate.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaDownload, FaEdit, FaArrowLeft } from 'react-icons/fa';
@@ -117,7 +116,7 @@ const Certificate = () => {
   const handleDownloadPDF = async (cert) => {
     try {
       setCertToDownload(cert);
-      await new Promise((resolve) => setTimeout(resolve, 700)); // Allow DOM render
+      await new Promise((resolve) => setTimeout(resolve, 700)); 
 
       const preview = document.getElementById('download-preview');
       if (!preview) return alert('Preview not found.');
@@ -190,7 +189,7 @@ const Certificate = () => {
           <div className="d-flex border-bottom border-dark">
             <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Name</div>
             <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.name || ''}</div>
-            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>S.No</div>
+            <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>Sr.No</div>
             <div className="p-2 bg-light fw-bold fs-5" style={{ width: '128px' }}>{cert.serialNo || ''}</div>
           </div>
           <div className="d-flex border-bottom border-dark">
@@ -220,7 +219,7 @@ const Certificate = () => {
               </div>
               <div className="p-3 text-center" style={{ width: '256px' }}>
                 <div style={{ color: '#FF4500' }} className="fw-bold fs-6">For {cert.headerTitle || ''}</div>
-                <div style={{ color: '#FF4500' }} className="fs-6 mt-2">Authorized by: {cert.name || ''}</div>
+                {/* <div style={{ color: '#FF4500' }} className="fs-6 mt-2"> {cert.name || ''}</div> */}
               </div>
             </div>
           </div>
@@ -317,7 +316,7 @@ const Certificate = () => {
             <table className="table table-bordered">
               <thead className="table-light">
                 <tr>
-                  <th>#</th>
+                  <th>Sr.No</th>
                   <th>Name</th>
                   <th>Item</th>
                   <th>Fineness</th>

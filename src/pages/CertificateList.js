@@ -18,6 +18,7 @@ const CertificateList = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
+  const [previewCert, setPreviewCert] = useState(null);
 
   const fetchCertificates = useCallback(async () => {
     try {
@@ -69,78 +70,26 @@ const CertificateList = () => {
     }
   };
 
-  const handleView = (cert) => {
-    const win = window.open('', '_blank');
-    win.document.write(`
-      <html>
-        <head>
-          <title>Certificate ${cert.serialNo}</title>
-          <style>
-            body { font-family: Arial; padding: 40px; max-width: 800px; margin: 0 auto; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .content { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
-            .footer { text-align: right; margin-top: 30px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h2 style="color: #2c3e50;">SWARANJALE</h2>
-            <h3 style="color: #34495e;">Purity Certificate</h3>
-          </div>
-          <div class="content">
-            <p><strong>Serial No:</strong> ${cert.serialNo}</p>
-            <p><strong>Name:</strong> ${cert.name}</p>
-            <p><strong>Item:</strong> ${cert.item}</p>
-            <p><strong>Fineness:</strong> ${cert.fineness}%</p>
-            <p><strong>Weight:</strong> ${cert.grossWeight} g</p>
-            <p><strong>Date:</strong> ${cert.date}</p>
-            ${cert.notes ? `<p><strong>Notes:</strong> ${cert.notes}</p>` : ''}
-          </div>
-          <div class="footer">
-            <p>For SWARANJALE</p>
-          </div>
-        </body>
-      </html>
-    `);
-    win.document.close();
-  };
-
   const handleGeneratePDF = async (cert) => {
     const container = document.createElement('div');
-    container.innerHTML = `
-      <div style="padding: 20px; font-family: Arial;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #2c3e50;">SWARANJALE</h2>
-          <h3 style="color: #34495e;">Purity Certificate</h3>
-        </div>
-        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-          <p><strong>Serial No:</strong> ${cert.serialNo}</p>
-          <p><strong>Name:</strong> ${cert.name}</p>
-          <p><strong>Item:</strong> ${cert.item}</p>
-          <p><strong>Fineness:</strong> ${cert.fineness}%</p>
-          <p><strong>Weight:</strong> ${cert.grossWeight} g</p>
-          <p><strong>Date:</strong> ${cert.date}</p>
-          ${cert.notes ? `<p><strong>Notes:</strong> ${cert.notes}</p>` : ''}
-        </div>
-        <div style="text-align: right; margin-top: 20px;">
-          <p>For SWARANJALE</p>
-        </div>
-      </div>
-    `;
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
     document.body.appendChild(container);
 
-    try {
-      const canvas = await html2canvas(container);
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF();
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`certificate_${cert.serialNo}.pdf`);
-    } finally {
-      document.body.removeChild(container);
-    }
+    const preview = <CertificatePreview cert={cert} />;
+    import('react-dom').then((ReactDOM) => {
+      ReactDOM.render(preview, container);
+      setTimeout(async () => {
+        const canvas = await html2canvas(container);
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`certificate_${cert.serialNo}.pdf`);
+        document.body.removeChild(container);
+      }, 500);
+    });
   };
 
   const handleDelete = async (certId) => {
@@ -191,7 +140,7 @@ const CertificateList = () => {
           <table className="table table-hover align-middle mb-0">
             <thead className="table-dark">
               <tr>
-                <th>#</th>
+                <th>Sr.No</th>
                 <th>Serial No</th>
                 <th>Name</th>
                 <th>Item</th>
@@ -222,7 +171,7 @@ const CertificateList = () => {
                       <div className="d-flex flex-wrap gap-1 justify-content-center">
                         <button
                           className="btn btn-sm btn-outline-primary"
-                          onClick={() => handleView(cert)}
+                          onClick={() => setPreviewCert(cert)}
                           title="View"
                         >
                           <FaEye />
@@ -270,6 +219,22 @@ const CertificateList = () => {
           </table>
         </div>
       </div>
+
+      {previewCert && (
+        <div className="modal show d-block" tabIndex="-1" role="dialog">
+          <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Certificate Preview</h5>
+                <button type="button" className="btn-close" onClick={() => setPreviewCert(null)}></button>
+              </div>
+              <div className="modal-body">
+                <CertificatePreview cert={previewCert} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -286,5 +251,67 @@ const getStatusColor = (status) => {
       return 'bg-secondary';
   }
 };
+
+const CertificatePreview = ({ cert }) => (
+  <div className="card mx-auto" style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', maxWidth: '816px', border: '2px solid #000' }}>
+    <div className="card-body p-4">
+      <div className="d-flex justify-content-between align-items-center mb-2">
+        <img src={cert.leftImage} className="img-fluid" style={{ width: '64px', height: '64px', border: '1.5px solid #DC2626', objectFit: 'contain' }} alt="left" />
+        <div className="text-center">
+          <div style={{ color: '#FF4500' }} className="fs-6">श्री गणेशाय नमः</div>
+          <h2 style={{ color: '#FF4500' }} className="fw-bold mb-1 fs-3">{cert.headerTitle}</h2>
+          <div className="fw-bold mb-1 fs-6">{cert.headerSubtitle}</div>
+          <div className="fs-6">{cert.address}</div>
+          <div className="fs-6">{cert.phone}</div>
+        </div>
+        <img src={cert.rightImage} className="img-fluid" style={{ width: '64px', height: '64px', border: '1.5px solid #DC2626', objectFit: 'contain' }} alt="right" />
+      </div>
+
+      <div className="text-center my-4">
+        <span className="badge" style={{ backgroundColor: '#FF4500', color: '#fff', padding: '6px 12px' }}>{cert.certificateTitle || 'SILVER PURITY CERTIFICATE'}</span>
+      </div>
+
+      <div className="border border-dark rounded">
+        <div className="d-flex border-bottom border-dark">
+          <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Name</div>
+          <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.name}</div>
+          <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>S.No</div>
+          <div className="p-2 bg-light fw-bold fs-5" style={{ width: '128px' }}>{cert.serialNo}</div>
+        </div>
+        <div className="d-flex border-bottom border-dark">
+          <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Item</div>
+          <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.item}</div>
+          <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>Date</div>
+          <div className="p-2 bg-light fs-5" style={{ width: '128px' }}>{cert.date}</div>
+        </div>
+        <div className="d-flex border-bottom border-dark">
+          <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Fineness</div>
+          <div className="p-2 border-end border-dark bg-light flex-grow-1">
+            <div className="fw-bold fs-4">{cert.fineness} %</div>
+            <div className="fs-6">{cert.fineness} Percent</div>
+          </div>
+          <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>G.Wt</div>
+          <div className="p-2 bg-light" style={{ width: '128px' }}>{cert.grossWeight}</div>
+        </div>
+        <div className="bg-light border-bottom border-dark">
+          <div className="d-flex">
+            <div className="flex-grow-1 p-3 border-end border-dark">
+              <div style={{ color: '#FF4500' }} className="fw-bold fs-6 mb-2">Note</div>
+              <div className="fs-6">
+                <div>- We are not responsible for any melting defects</div>
+                <div>- We are responsible for more than 0.50% difference</div>
+                <div>- If any doubt ask for re-testing</div>
+              </div>
+            </div>
+            <div className="p-3 text-center" style={{ width: '256px' }}>
+              <div style={{ color: '#FF4500' }} className="fw-bold fs-6">For {cert.headerTitle}</div>
+              <div style={{ color: '#FF4500' }} className="fs-6 mt-2">Authorized by: {cert.name}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default CertificateList;
