@@ -25,7 +25,7 @@ const CertificateList = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('vendorToken');
-      const res = await axios.get('https://purity-certificate-server.onrender.com/api/certificates', {
+      const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/certificates`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCertificates(Array.isArray(res.data) ? res.data : []);
@@ -40,7 +40,7 @@ const CertificateList = () => {
   const fetchStats = useCallback(async () => {
     try {
       const token = localStorage.getItem('vendorToken');
-      const res = await axios.get('https://purity-certificate-server.onrender.com/api/certificates/stats', {
+      const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/certificates/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setStats(res.data);
@@ -58,7 +58,7 @@ const CertificateList = () => {
     try {
       const token = localStorage.getItem('vendorToken');
       await axios.put(
-        `https://purity-certificate-server.onrender.com/api/certificates/${certId}`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/certificates/${certId}`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -100,7 +100,7 @@ const CertificateList = () => {
 
     try {
       const token = localStorage.getItem('vendorToken');
-      await axios.delete(`https://purity-certificate-server.onrender.com/api/certificates/${certId}`, {
+      await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/certificates/${certId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert('Certificate deleted successfully.');

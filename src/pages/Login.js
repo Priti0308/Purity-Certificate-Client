@@ -10,7 +10,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('https://purity-certificate-server.onrender.com/api/vendors/login', {
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/vendors/login`, {
         mobile,
         password,
       });

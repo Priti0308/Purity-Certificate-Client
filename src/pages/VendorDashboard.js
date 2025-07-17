@@ -30,12 +30,12 @@ const VendorDashboard = () => {
           setEditData(vendorData);
           if (vendorData.logo) setPreviewLogo(vendorData.logo);
 
-          const resStats = await axios.get('https://purity-certificate-server.onrender.com/api/certificates/stats', {
+          const resStats = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/certificates/stats`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setStats(resStats.data);
 
-          const resRecent = await axios.get('https://purity-certificate-server.onrender.com/api/certificates/recent', {
+          const resRecent = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/certificates/recent`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setRecentActivities(resRecent.data);
@@ -98,7 +98,7 @@ const VendorDashboard = () => {
     }
 
     const res = await axios.put(
-      `https://purity-certificate-server.onrender.com/api/vendors/me`,
+      `${process.env.REACT_APP_API_BASE_URL}/api/vendors/me`,
       formData,
       {
         headers: {

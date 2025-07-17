@@ -1,4 +1,4 @@
-// src/components/AdminDashboard.js
+
 import React, { useState } from 'react';
 import AdminSidebar from './AdminSidebar';
 import AdminOverview from './AdminOverview';

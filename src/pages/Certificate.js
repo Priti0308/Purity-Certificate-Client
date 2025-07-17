@@ -34,7 +34,7 @@ const Certificate = () => {
     const fetchCertificates = async () => {
       try {
         const token = localStorage.getItem('vendorToken');
-        const response = await axios.get('https://purity-certificate-server.onrender.com/api/certificates', {
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/certificates`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCertificates(response.data);
@@ -76,7 +76,7 @@ const Certificate = () => {
       let response;
       if (editId) {
         response = await axios.put(
-          `https://purity-certificate-server.onrender.com/api/certificates/${editId}`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/certificates/${editId}`,
           payload,
           { headers }
         );
@@ -87,7 +87,7 @@ const Certificate = () => {
         setEditId(null);
       } else {
         response = await axios.post(
-          'https://purity-certificate-server.onrender.com/api/certificates',
+          `${process.env.REACT_APP_API_BASE_URL}/api/certificates`,
           payload,
           { headers }
         );
