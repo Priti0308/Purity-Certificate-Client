@@ -200,7 +200,7 @@ const CertificateList = () => {
 
   return (
     <div className="container py-5">
-      <h2 className="text-center text-primary fw-bold mb-4">Certificate Management</h2>
+      <h2 className="text-center text-black fw-bold mb-4">Certificate Management</h2>
 
       <div className="mb-4 d-flex justify-content-between">
         <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>

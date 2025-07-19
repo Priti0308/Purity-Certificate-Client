@@ -234,7 +234,7 @@ const Certificate = () => {
         <FaArrowLeft className="me-2" /> Back
       </button>
 
-      <h3 className="text-center text-danger mb-4">{editId ? 'Edit' : 'Create'} Purity Certificate</h3>
+      <h3 className="text-center text-cyan fw-bold mb-4">{editId ? 'Edit' : 'Create'} Purity Certificate</h3>
 
       <div className="card shadow mb-5">
         <div className="card-body">
@@ -249,16 +249,16 @@ const Certificate = () => {
               </div>
 
               {[
-                { name: 'headerTitle', placeholder: 'Company name' },
-                { name: 'headerSubtitle', placeholder: 'Company subtitle' },
-                { name: 'address', placeholder: 'Business address' },
-                { name: 'phone', placeholder: 'Phone' },
-                { name: 'serialNo', placeholder: 'Serial No' },
-                { name: 'name', placeholder: 'Customer Name' },
-                { name: 'item', placeholder: 'Item name' },
-                { name: 'fineness', placeholder: 'Purity %' },
-                { name: 'grossWeight', placeholder: 'Weight in grams' },
-                { name: 'date', placeholder: 'Date' },
+                { name: 'HeaderTitle', placeholder: 'Company name' },
+                { name: 'HeaderSubtitle', placeholder: 'Company subtitle' },
+                { name: 'Address', placeholder: 'Business address' },
+                { name: 'Phone', placeholder: 'Phone' },
+                { name: 'SerialNo', placeholder: 'Serial No' },
+                { name: 'Name', placeholder: 'Customer Name' },
+                { name: 'Item', placeholder: 'Item name' },
+                { name: 'Fineness', placeholder: 'Purity %' },
+                { name: 'GrossWeight', placeholder: 'Weight in grams' },
+                { name: 'Date', placeholder: 'Date' },
               ].map((field) => (
                 <div className="col-md-4" key={field.name}>
                   <label className="form-label">{field.name.replace(/([A-Z])/g, ' $1')}</label>

@@ -77,47 +77,38 @@ const VendorDashboard = () => {
 
 
   const handleSave = async () => {
-  try {
-    const token = localStorage.getItem('vendorToken');
+    try {
+      const token = localStorage.getItem('vendorToken');
 
-    if (!editData._id) {
-      alert("❌ Vendor ID is missing. Please re-login.");
-      return;
-    }
-
-    const formData = new FormData();
-    // Add text fields
-    formData.append('name', editData.name || '');
-    formData.append('mobile', editData.mobile || '');
-    formData.append('businessName', editData.businessName || '');
-    formData.append('address', editData.address || '');
-
-    // Add logo file if it exists
-    if (editData.logoFile) {
-      formData.append('logo', editData.logoFile);
-    }
-
-    const res = await axios.put(
-      `${process.env.REACT_APP_API_BASE_URL}/api/vendors/me`,
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
+      const formData = new FormData();
+      formData.append('name', editData.name || '');
+      formData.append('mobile', editData.mobile || '');
+      formData.append('businessName', editData.businessName || '');
+      formData.append('address', editData.address || '');
+      if (editData.logoFile) {
+        formData.append('logoFile', editData.logoFile);
       }
-    );
 
-    setVendor(res.data);
-    localStorage.setItem('vendor', JSON.stringify(res.data));
-    setEditing(false);
-    alert('✅ Profile updated successfully.');
-  } catch (err) {
-    console.error('Update error:', err);
-    alert(err.response?.data?.message || '❌ Failed to update profile.');
-  }
-};
+      const res = await axios.put(
+        `${process.env.REACT_APP_API_BASE_URL}/api/vendors/profile`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
 
+      setVendor(res.data.vendor);
+      localStorage.setItem('vendor', JSON.stringify(res.data.vendor));
+      setEditing(false);
+      alert('✅ Profile updated successfully.');
+    } catch (err) {
+      console.error('Update error:', err);
+      alert(err.response?.data?.message || '❌ Failed to update profile.');
+    }
+  };
 
   if (loading) {
     return (
