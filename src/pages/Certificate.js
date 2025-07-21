@@ -4,6 +4,9 @@ import { FaDownload, FaEdit, FaArrowLeft } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const Certificate = () => {
   const navigate = useNavigate();
@@ -83,7 +86,7 @@ const Certificate = () => {
         setCertificates((prev) =>
           prev.map((cert) => (cert._id === editId ? response.data : cert))
         );
-        alert('✅ Certificate updated successfully.');
+        toast.success('Certificate updated successfully.');
         setEditId(null);
       } else {
         response = await axios.post(
@@ -92,7 +95,7 @@ const Certificate = () => {
           { headers }
         );
         setCertificates((prev) => [...prev, response.data]);
-        alert('✅ Certificate submitted successfully.');
+        toast.success('Certificate submitted successfully.');
       }
 
       // Delay reset to allow preview & user feedback
@@ -102,7 +105,7 @@ const Certificate = () => {
       }, 1000);
     } catch (error) {
       console.error('Error saving certificate:', error);
-      alert(error.response?.data?.message || '❌ Failed to save certificate.');
+      toast.error(error.response?.data?.message || '❌ Failed to save certificate.');
     }
   };
 
@@ -133,7 +136,7 @@ const Certificate = () => {
       setCertToDownload(null);
     } catch (error) {
       console.error('Error downloading certificate:', error);
-      alert('Failed to process certificate');
+      toast.error('Failed to process certificate');
     }
   };
 
@@ -249,16 +252,16 @@ const Certificate = () => {
               </div>
 
               {[
-                { name: 'HeaderTitle', placeholder: 'Company name' },
-                { name: 'HeaderSubtitle', placeholder: 'Company subtitle' },
-                { name: 'Address', placeholder: 'Business address' },
-                { name: 'Phone', placeholder: 'Phone' },
-                { name: 'SerialNo', placeholder: 'Serial No' },
-                { name: 'Name', placeholder: 'Customer Name' },
-                { name: 'Item', placeholder: 'Item name' },
-                { name: 'Fineness', placeholder: 'Purity %' },
-                { name: 'GrossWeight', placeholder: 'Weight in grams' },
-                { name: 'Date', placeholder: 'Date' },
+                { name: 'headerTitle', placeholder: 'Company name' },
+                { name: 'headerSubtitle', placeholder: 'Company subtitle' },
+                { name: 'address', placeholder: 'Business address' },
+                { name: 'phone', placeholder: 'Phone' },
+                { name: 'serialNo', placeholder: 'Serial No' },
+                { name: 'name', placeholder: 'Customer Name' },
+                { name: 'item', placeholder: 'Item name' },
+                { name: 'fineness', placeholder: 'Purity %' },
+                { name: 'grossWeight', placeholder: 'Weight in grams' },
+                { name: 'date', placeholder: 'Date' },
               ].map((field) => (
                 <div className="col-md-4" key={field.name}>
                   <label className="form-label">{field.name.replace(/([A-Z])/g, ' $1')}</label>
@@ -362,6 +365,8 @@ const Certificate = () => {
           <CertificatePreview cert={certToDownload} />
         </div>
       )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+
     </div>
   );
 };

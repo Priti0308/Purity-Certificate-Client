@@ -31,9 +31,10 @@ const App = () => {
         <Route path="/certificate-list" element={<CertificateList />} />
         <Route path="/admin-dashboard" element={<Dashboard />} />
         <Route path="/admin-login" element={<AdminLogin />} />
-
+        
       </Routes>
     </Router>
+    
   );
 };
 

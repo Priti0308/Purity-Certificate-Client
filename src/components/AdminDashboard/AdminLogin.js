@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import {toast,ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const AdminLogin = () => {
@@ -17,12 +19,12 @@ const AdminLogin = () => {
         password,
       });
 
-      alert(res.data.message || 'Admin login successful');
+      toast.success(res.data.message || 'Admin login successful');
       localStorage.setItem('admin', JSON.stringify(res.data.admin));
       navigate('/admin-dashboard');
   
     } catch (error) {
-      alert(error.response?.data?.message || 'Login failed');
+      toast.error(error.response?.data?.message || 'Login failed');
     }
   };
 
@@ -76,6 +78,7 @@ const AdminLogin = () => {
           </form>
         </div>
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

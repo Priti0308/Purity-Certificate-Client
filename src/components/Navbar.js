@@ -1,16 +1,25 @@
-// src/components/Navbar.js
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isActive = (path) => location.pathname === path;
+
+  // Check if vendor is logged in
+  const isVendorLoggedIn = localStorage.getItem('vendorToken');
+
+  // Logout 
+  const handleLogout = () => {
+    localStorage.removeItem('vendorToken');
+    localStorage.removeItem('vendor');
+    navigate('/login');
+  };
 
   return (
     <nav className="navbar navbar-expand-lg sticky-top shadow-sm" style={{ backgroundColor: '#FFD700' }}>
       <div className="container">
-        {/* Brand */}
         <Link className="navbar-brand fw-bold text-dark" to="/">
           Purity Certificate Portal
         </Link>
@@ -27,7 +36,7 @@ const Navbar = () => {
 
         {/* Navigation Links */}
         <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav ms-auto text-center">
+          <ul className="navbar-nav ms-auto text-center align-items-center">
             <li className="nav-item mx-2">
               <Link
                 className={`nav-link fw-semibold ${isActive('/') ? 'text-dark text-decoration-underline' : 'text-dark'}`}
@@ -45,15 +54,24 @@ const Navbar = () => {
                 Vendor Dashboard
               </Link>
             </li>
-            
+
             <li className="nav-item mx-2">
               <Link
-                className={`nav-link fw-semibold ${isActive('/') ? 'text-dark text-decoration-underline' : 'text-dark'}`}
+                className={`nav-link fw-semibold ${isActive('/help') ? 'text-dark text-decoration-underline' : 'text-dark'}`}
                 to="/help"
               >
                 Help
               </Link>
             </li>
+
+            {/* Logout (only if logged in) */}
+            {isVendorLoggedIn && (
+              <li className="nav-item mx-2">
+                <button className="btn btn-outline-dark fw-semibold" onClick={handleLogout}>
+                  Logout
+                </button>
+              </li>
+            )}
           </ul>
         </div>
       </div>
@@ -61,4 +79,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar; 
+export default Navbar;

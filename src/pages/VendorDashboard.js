@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import {
-  FaFileSignature, FaListAlt,
-  FaCheckCircle, FaHourglassHalf, FaTimesCircle,
-  FaList, FaClock, FaEdit, FaSave
+  FaFileSignature, FaListAlt, FaCheckCircle,
+  FaHourglassHalf, FaTimesCircle, FaList,
+  FaClock, FaEdit, FaSave
 } from 'react-icons/fa';
 
 const VendorDashboard = () => {
@@ -16,8 +19,6 @@ const VendorDashboard = () => {
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
   const [recentActivities, setRecentActivities] = useState([]);
 
-
-  // Load vendor and dashboard data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -26,6 +27,7 @@ const VendorDashboard = () => {
 
         if (storedVendor && token) {
           const vendorData = JSON.parse(storedVendor);
+          console.log('Fetched Vendor:', vendorData);
           setVendor(vendorData);
           setEditData(vendorData);
           if (vendorData.logo) setPreviewLogo(vendorData.logo);
@@ -41,14 +43,14 @@ const VendorDashboard = () => {
           setRecentActivities(resRecent.data);
         }
       } catch (err) {
-        console.error('Error fetching data:', err);
+        toast.error(' Failed to load vendor data');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 300000);
+    const interval = setInterval(fetchData, 300000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -57,24 +59,23 @@ const VendorDashboard = () => {
   };
 
   const handleLogoChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    if (file.size > 200 * 1024) {
-      alert("❌ Please select an image smaller than 200KB.");
-      return;
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 200 * 1024) {
+        toast.error(" Please select an image smaller than 200KB.");
+        return;
+      }
+
+      setEditData((prev) => ({ ...prev, logoFile: file }));
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewLogo(reader.result);
+        toast.success("Logo selected successfully.");
+      };
+      reader.readAsDataURL(file);
     }
-
-    setEditData((prev) => ({ ...prev, logoFile: file }));
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewLogo(reader.result);
-      alert("✅ Logo selected successfully.");
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
+  };
 
   const handleSave = async () => {
     try {
@@ -103,10 +104,9 @@ const VendorDashboard = () => {
       setVendor(res.data.vendor);
       localStorage.setItem('vendor', JSON.stringify(res.data.vendor));
       setEditing(false);
-      alert('✅ Profile updated successfully.');
+      toast.success('Profile updated successfully.');
     } catch (err) {
-      console.error('Update error:', err);
-      alert(err.response?.data?.message || '❌ Failed to update profile.');
+      toast.error(err.response?.data?.message || 'Failed to update profile.');
     }
   };
 
@@ -129,10 +129,12 @@ const VendorDashboard = () => {
 
   return (
     <div className="container-fluid py-4 px-4 bg-light min-vh-100">
+      <ToastContainer position="top-right" autoClose={3000} />
+
       <h2 className="text-center fw-bold text-primary mb-4">Welcome to Your Dashboard</h2>
 
       <div className="row g-4">
-        {/* Profile */}
+        {/* Profile Section */}
         <div className="col-md-4">
           <div className="card shadow-sm border-0 rounded-4 h-100">
             <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -158,7 +160,7 @@ const VendorDashboard = () => {
               <input type="text" name="businessName" disabled={!editing} className="form-control mb-3" value={editData.businessName} onChange={handleInputChange} />
 
               <label className="form-label">Owner Name</label>
-              <input type="text" name="name" disabled={!editing} className="form-control mb-3" value={editData.name} onChange={handleInputChange} />
+              <input type="text" name="name" disabled={!editing} className="form-control mb-3" value={editData.name || ''} onChange={handleInputChange} />
 
               <label className="form-label">Mobile</label>
               <input type="text" name="mobile" disabled={!editing} className="form-control mb-3" value={editData.mobile} onChange={handleInputChange} />
@@ -172,7 +174,7 @@ const VendorDashboard = () => {
           </div>
         </div>
 
-        {/* Actions + Stats */}
+        {/* Stats & Actions */}
         <div className="col-md-8">
           <div className="row g-4">
             <div className="col-md-6">
@@ -195,7 +197,6 @@ const VendorDashboard = () => {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="row g-4 mt-1">
             {[
               { label: 'Total Certificates', icon: <FaList />, color: 'primary', count: stats.total },
@@ -213,7 +214,6 @@ const VendorDashboard = () => {
             ))}
           </div>
 
-          {/* Activities */}
           <div className="card shadow-sm border-0 rounded-4 mt-4">
             <div className="card-header bg-white border-0 py-3">
               <h5><FaClock className="me-2 text-primary" />Recent Activities</h5>

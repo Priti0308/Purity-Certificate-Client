@@ -7,6 +7,9 @@ import {
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from'jspdf-autotable';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 const AdminOverview = ({ section }) => {
   const [vendors, setVendors] = useState([]);
@@ -20,7 +23,6 @@ const AdminOverview = ({ section }) => {
 
   const vendorsPerPage = 10;
 
-  // Fetch all vendors when section loads
   useEffect(() => {
     fetchVendors();
   }, [section]);
@@ -55,11 +57,11 @@ const AdminOverview = ({ section }) => {
     e.preventDefault();
     try {
       await axios.post('/vendors', newVendor);
-      alert('✅ Vendor added');
+      toast.success('Vendor added');
       setNewVendor({ name: '', mobile: '', businessName: '', password: '', address: '' });
       fetchVendors();
     } catch {
-      alert('❌ Add failed');
+      toast.error('Add vendor failed');
     }
   };
 
@@ -79,21 +81,20 @@ const AdminOverview = ({ section }) => {
       setVendors(prev =>
         prev.map(v => (v._id === updatedVendor._id ? updatedVendor : v))
       );
-      alert('✅ Updated');
+      toast.success('Updated Successfully');
       setEditMode(null);
     } catch (err) {
       console.error(err);
-      alert('❌ Update failed');
+      toast.error('Update failed');
     }
   };
 
-  
 
   // --- Delete / Password Reset ---
   const handleDelete = async id => {
     if (window.confirm('Delete this vendor?')) {
       await axios.delete(`/vendors/${id}`);
-      alert('✅ Deleted');
+      toast.success('Deleted');
       fetchVendors();
     }
   };
@@ -101,19 +102,19 @@ const AdminOverview = ({ section }) => {
     const pw = prompt('Enter new password:');
     if (pw) {
       await axios.put(`/vendors/${id}/set-password`, { password: pw });
-      alert('✅ Password set');
+      toast.success('Password set');
     }
   };
 
   // --- Approve / Reject ---
   const handleApprove = async id => {
     await axios.put(`/vendors/${id}/approve`);
-    alert('✅ Approved');
+    toast.success('Approved');
     setVendors(v => v.filter(x => x._id !== id));
   };
   const handleReject = async id => {
     await axios.put(`/vendors/${id}/reject`);
-    alert('❌ Rejected');
+    toast.error('Rejected');
     setVendors(v => v.filter(x => x._id !== id));
   };
 
@@ -146,8 +147,7 @@ const AdminOverview = ({ section }) => {
   doc.save('vendors.pdf');
 };
 
-
-  // Table header (used in both Pending & Manage)
+  // --- Header for table ---
   const header = (
     <thead className="table-dark">
       <tr>
@@ -309,6 +309,9 @@ const AdminOverview = ({ section }) => {
           </div>
         </div>
       )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+
+      {/* No section selected */}
     </div>
   );
 };

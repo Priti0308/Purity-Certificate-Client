@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import {toast,ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Login = () => {
   const [mobile, setMobile] = useState('');
@@ -18,11 +20,11 @@ const Login = () => {
       localStorage.setItem('vendorToken', response.data.token);
       localStorage.setItem('vendor', JSON.stringify(response.data.vendor));
 
-      alert('✅ Login successful!');
+      toast.success('✅ Login successful!');
       navigate('/vendor-dashboard');
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || '❌ Login failed. Please try again.');
+      toast.error(err.response?.data?.message || 'Login failed. Please try again.');
     }
   };
 
@@ -74,7 +76,9 @@ const Login = () => {
           </form>
         </div>
       </div>
+       <ToastContainer position="top-right" autoClose={3000}/>
     </div>
+   
   );
 };
 

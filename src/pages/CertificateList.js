@@ -4,7 +4,7 @@ import {
   FaEye,
   FaFilePdf,
   FaTrash,
-  FaSpinner,
+  // FaSpinner,
   FaArrowLeft,
   FaCheck,
   FaTimes,
@@ -12,18 +12,20 @@ import {
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const CertificateList = () => {
   const navigate = useNavigate();
   const [certificates, setCertificates] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
   const [previewCert, setPreviewCert] = useState(null);
   const [certToDownload, setCertToDownload] = useState(null);
 
   const fetchCertificates = useCallback(async () => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const token = localStorage.getItem('vendorToken');
       const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/certificates`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -33,7 +35,7 @@ const CertificateList = () => {
       console.error('Error fetching certificates:', err);
       setCertificates([]);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   }, []);
 
@@ -62,12 +64,12 @@ const CertificateList = () => {
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert(`Certificate ${status === 'approved' ? 'approved' : 'rejected'} successfully.`);
+      toast.success(`Certificate ${status === 'approved' ? 'approved' : 'rejected'} successfully.`);
       fetchCertificates();
       fetchStats();
     } catch (err) {
       console.error(`Error updating certificate status to ${status}:`, err);
-      alert(`Failed to update certificate status to ${status}`);
+      toast.error(`Failed to update certificate status to ${status}`);
     }
   };
 
@@ -91,7 +93,7 @@ const CertificateList = () => {
       setCertToDownload(null);
     } catch (error) {
       console.error('Error downloading certificate:', error);
-      alert('Failed to process certificate');
+      toast.error('Failed to process certificate');
     }
   };
 
@@ -103,23 +105,16 @@ const CertificateList = () => {
       await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/certificates/${certId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('Certificate deleted successfully.');
+      toast.success('Certificate deleted successfully.');
       fetchCertificates();
       fetchStats();
     } catch (err) {
       console.error('Error deleting certificate:', err);
-      alert('Failed to delete certificate. Please try again.');
+      toast.error('Failed to delete certificate. Please try again.');
     }
   };
 
-  if (loading) {
-    return (
-      <div className="container py-5 text-center">
-        <FaSpinner className="spinner-border text-primary" role="status" />
-        <p className="mt-2">Loading certificates...</p>
-      </div>
-    );
-  }
+  
 
   const CertificatePreview = ({ cert }) => {
     if (!cert) return null;
@@ -142,7 +137,9 @@ const CertificateList = () => {
           </div>
 
           <div className="text-center my-4">
-            <span className="badge" style={{ backgroundColor: '#FF4500', color: '#fff', padding: '6px 12px' }}>{cert.certificateTitle || 'SILVER PURITY CERTIFICATE'}</span>
+            <span className="badge" style={{ backgroundColor: '#FF4500', color: '#fff', padding: '6px 12px' }}>
+              {cert.certificateTitle || 'SILVER PURITY CERTIFICATE'}
+            </span>
           </div>
 
           <div className="border border-dark rounded">
@@ -198,6 +195,7 @@ const CertificateList = () => {
     }
   };
 
+  
   return (
     <div className="container py-5">
       <h2 className="text-center text-black fw-bold mb-4">Certificate Management</h2>
@@ -284,8 +282,8 @@ const CertificateList = () => {
       )}
 
       {previewCert && (
-        <div className="modal show d-block" tabIndex="-1" role="dialog">
-          <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div className="modal show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="modal-dialog modal-xl modal-dialog-centered" role="document">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Certificate Preview</h5>
@@ -297,7 +295,10 @@ const CertificateList = () => {
             </div>
           </div>
         </div>
+        
       )}
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };
