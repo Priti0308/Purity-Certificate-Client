@@ -1,30 +1,32 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import {toast,ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AdminLogin = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/admin/login`, {
-        username,
-        password,
-      });
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_BASE_URL}/api/admin/login`,
+        {
+          username,
+          password,
+        }
+      );
 
-      toast.success(res.data.message || 'Admin login successful');
-      localStorage.setItem('admin', JSON.stringify(res.data.admin));
-      navigate('/admin-dashboard');
-  
+      toast.success(res.data.message || "Admin login successful");
+      localStorage.setItem("admin", JSON.stringify(res.data.admin));
+      setTimeout(() => {
+        navigate("/admin-dashboard");
+      }, 1500);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      toast.error(error.response?.data?.message || "Login failed");
     }
   };
 
@@ -36,8 +38,8 @@ const AdminLogin = () => {
         <div
           className="col-md-5 col-sm-10 col-11 p-4 rounded"
           style={{
-            backgroundColor: '#fff',
-            border: '2px solid #F5C45E',
+            backgroundColor: "#fff",
+            border: "2px solid #F5C45E",
             // boxShadow: '0 0 20px rgba(245, 196, 94, 0.6)',
           }}
         >
@@ -47,7 +49,7 @@ const AdminLogin = () => {
               <input
                 type="text"
                 className="form-control border-warning"
-                placeholder="Enter admin username"
+                placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -59,7 +61,7 @@ const AdminLogin = () => {
               <input
                 type="password"
                 className="form-control border-warning"
-                placeholder="Enter password"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -70,7 +72,7 @@ const AdminLogin = () => {
               type="submit"
               className="btn w-100 text-white fw-semibold"
               style={{
-                backgroundColor: '#102E50',
+                backgroundColor: "#102E50",
               }}
             >
               Login as Admin

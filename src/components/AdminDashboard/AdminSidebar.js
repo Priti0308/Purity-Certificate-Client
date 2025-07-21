@@ -15,7 +15,7 @@ const AdminSidebar = ({ currentSection, setCurrentSection }) => {
 
   return (
     <div className="bg-white shadow-sm p-3 border-end min-vh-100">
-      <h5 className="fw-bold mb-4 text-warning text-center">Admin Panel</h5>
+      <h5 className="fw-bold mb-4 text-dark text-center">Admin Panel</h5>
       <ul className="nav flex-column">
         {menu.map((item) => (
           <li className="nav-item mb-2" key={item.key}>
