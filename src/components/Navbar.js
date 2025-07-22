@@ -73,6 +73,18 @@ const Navbar = () => {
               </Link>
             </li>
 
+<li className="nav-item mx-2">
+  <Link
+    className={`nav-link fw-semibold ${
+      isActive("/contact")
+        ? "text-dark text-decoration-underline"
+        : "text-dark"
+    }`}
+    to="/contact"
+  >
+    Contact Us
+  </Link>
+</li>
             <li className="nav-item mx-2">
               <Link
                 className={`nav-link fw-semibold ${

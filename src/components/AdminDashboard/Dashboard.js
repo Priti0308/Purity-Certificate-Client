@@ -5,7 +5,7 @@ import AdminOverview from './AdminOverview';
 
 
 const Dashboard = () => {
-  const [currentSection, setCurrentSection] = useState('add'); // default section
+  const [currentSection, setCurrentSection] = useState('add'); 
 
   return (
     <div className="container-fluid">
