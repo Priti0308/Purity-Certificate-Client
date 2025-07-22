@@ -8,7 +8,8 @@ const ContactMessages = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get("/contact"); // Make sure this is correct path
+        const res = await axios.get("/contact"); 
+
         setMessages(res.data);
       } catch (err) {
         console.error("Failed to fetch messages", err);
@@ -28,14 +29,14 @@ const ContactMessages = () => {
         <p>No messages received yet.</p>
       ) : (
         <table className="table table-bordered">
-          <thead className="table-light">
+          <thead className="table-dark">
             <tr>
-              <th>#</th>
+              <th>Sr.No</th>
               <th>Name</th>
               <th>Email</th>
               <th>Subject</th>
               <th>Message</th>
-              <th>Status</th>
+              
               <th>Received At</th>
             </tr>
           </thead>
@@ -47,7 +48,7 @@ const ContactMessages = () => {
                 <td>{msg.email}</td>
                 <td>{msg.subject}</td>
                 <td>{msg.message}</td>
-                <td>
+                {/* <td>
                   <span
                     className={`badge ${
                       msg.status === "responded" ? "bg-success" : "bg-secondary"
@@ -55,7 +56,7 @@ const ContactMessages = () => {
                   >
                     {msg.status}
                   </span>
-                </td>
+                </td> */}
                 <td>{new Date(msg.createdAt).toLocaleString()}</td>
               </tr>
             ))}
