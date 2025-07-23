@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from '../assets/certificate.svg'; 
+import logo from "../assets/certificate.svg";
 
 const Navbar = () => {
   const location = useLocation();
@@ -24,13 +24,16 @@ const Navbar = () => {
       style={{ backgroundColor: "#FFD700" }}
     >
       <div className="container">
-        <Link className="navbar-brand fw-bold d-flex align-items-center text-dark" to="/">
+        <Link
+          className="navbar-brand fw-bold d-flex align-items-center text-dark"
+          to="/"
+        >
           <img
             src={logo}
             alt="Logo"
             height="30"
             className="me-2"
-            style={{ objectFit: 'contain' }}
+            style={{ objectFit: "contain" }}
           />
           Purity Certificate Portal
         </Link>
@@ -60,31 +63,19 @@ const Navbar = () => {
               </Link>
             </li>
 
+            
             <li className="nav-item mx-2">
               <Link
                 className={`nav-link fw-semibold ${
-                  isActive("/vendor-dashboard")
+                  isActive("/contact")
                     ? "text-dark text-decoration-underline"
                     : "text-dark"
                 }`}
-                to="/vendor-dashboard"
+                to="/contact"
               >
-                Vendor Dashboard
+                Contact Us
               </Link>
             </li>
-
-<li className="nav-item mx-2">
-  <Link
-    className={`nav-link fw-semibold ${
-      isActive("/contact")
-        ? "text-dark text-decoration-underline"
-        : "text-dark"
-    }`}
-    to="/contact"
-  >
-    Contact Us
-  </Link>
-</li>
             <li className="nav-item mx-2">
               <Link
                 className={`nav-link fw-semibold ${
