@@ -5,11 +5,11 @@ const ContactMessages = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch messages
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get("/contact"); 
-
+        const res = await axios.get("/contact");
         setMessages(res.data);
       } catch (err) {
         console.error("Failed to fetch messages", err);
@@ -20,6 +20,20 @@ const ContactMessages = () => {
 
     fetchMessages();
   }, []);
+
+  // Delete message
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this message?")) return;
+
+    try {
+      await axios.delete(`/contact/${id}`); 
+      setMessages((prev) => prev.filter((msg) => msg._id !== id)); 
+      alert("Message deleted successfully.");
+    } catch (err) {
+      console.error("Failed to delete message", err);
+      alert("Failed to delete message. Please try again.");
+    }
+  };
 
   if (loading) return <p>Loading messages...</p>;
 
@@ -37,6 +51,7 @@ const ContactMessages = () => {
               <th>Subject</th>
               <th>Message</th>
               <th>Received At</th>
+              <th>Action</th> 
             </tr>
           </thead>
           <tbody>
@@ -47,16 +62,15 @@ const ContactMessages = () => {
                 <td>{msg.email}</td>
                 <td>{msg.subject}</td>
                 <td>{msg.message}</td>
-                {/* <td>
-                  <span
-                    className={`badge ${
-                      msg.status === "responded" ? "bg-success" : "bg-secondary"
-                    }`}
-                  >
-                    {msg.status}
-                  </span>
-                </td> */}
                 <td>{new Date(msg.createdAt).toLocaleString()}</td>
+                <td>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDelete(msg._id)}
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
