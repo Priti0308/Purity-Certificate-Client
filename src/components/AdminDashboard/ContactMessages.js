@@ -36,7 +36,6 @@ const ContactMessages = () => {
               <th>Email</th>
               <th>Subject</th>
               <th>Message</th>
-              
               <th>Received At</th>
             </tr>
           </thead>

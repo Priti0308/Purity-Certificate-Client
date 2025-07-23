@@ -13,9 +13,21 @@ import { motion } from "framer-motion";
 const Home = () => {
   const steps = [
     ["Register", "Sign up as a vendor", <FaUserCheck className="display-5" />],
-    ["Approval", "Admin verifies your profile", <FaShieldAlt className="display-5" />],
-    ["Generate", "Fill out & create certificates", <FaCertificate className="display-5" />],
-    ["Download", "Save or share with clients", <FaUsersCog className="display-5" />],
+    [
+      "Approval",
+      "Admin verifies your profile",
+      <FaShieldAlt className="display-5" />,
+    ],
+    [
+      "Generate",
+      "Fill out & create certificates",
+      <FaCertificate className="display-5" />,
+    ],
+    [
+      "Download",
+      "Save or share with clients",
+      <FaUsersCog className="display-5" />,
+    ],
   ];
 
   const fadeIn = {
@@ -27,13 +39,15 @@ const Home = () => {
     <div className="bg-light">
       {/* Hero Section */}
       <section
-        className="text-white py-5"
+        className="text-white d-flex align-items-center"
         style={{
           background: "linear-gradient(135deg, #102E50 0%, #1a3a6a 100%)",
           position: "relative",
           overflow: "hidden",
+          minHeight: "100vh",
         }}
       >
+        {/* Background pattern */}
         <div
           className="position-absolute w-100 h-100"
           style={{
@@ -44,69 +58,101 @@ const Home = () => {
           }}
         ></div>
 
-        <div className="container-fluid position-relative py-5 px-0">
+        <div className="container-fluid position-relative px-0">
           <div className="row g-0 align-items-center">
-            {/* Left Text Section - 25% */}
+            {/* ✅ Left Text Section */}
             <motion.div
-              className="col-lg-3 px-4 text-center text-lg-start"
-              initial="hidden"
-              animate="visible"
-              variants={fadeIn}
-              transition={{ duration: 0.6 }}
+              className="col-12 col-lg-3 px-4 px-lg-5 d-flex flex-column justify-content-center text-center text-lg-start"
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              style={{
+                minHeight: "100vh",
+              }}
             >
-              <h1 className="fw-bold display-5 mb-3">Purity Certificate Portal</h1>
-              <p className="lead mb-4 fs-5">
-                Trusted digital certificates for gold, sweets, and food businesses
-              </p>
-              <div className="d-flex justify-content-center justify-content-lg-start flex-wrap gap-3">
-                <Link
-                  to="/login"
-                  className="btn btn-light btn-lg px-4 py-3 rounded-pill fw-bold d-flex align-items-center gap-2"
-                  style={{ minWidth: "180px" }}
+              <div className="mx-auto mx-lg-0" style={{ maxWidth: "380px" }}>
+                <h1
+                  className="fw-bold mb-6"
+                  style={{ fontSize: "2.8rem", lineHeight: "1.2" }}
                 >
-                  Vendor Login <FaArrowRight />
-                </Link>
-                <Link
-                  to="/admin-login"
-                  className="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-bold"
-                  style={{ minWidth: "180px" }}
+                  Purity Certificate Portal
+                </h1>
+                <p
+                  className="lead mb-5"
+                  style={{
+                    fontSize: "1.25rem",
+                    color: "#dcdcdc",
+                  }}
                 >
-                  Admin Login
-                </Link>
+                  Trusted digital certificates for gold, sweets, and food
+                  businesses
+                </p>
+
+                {/* Buttons */}
+                <motion.div
+                  className="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.8 }}
+                >
+                  <Link
+                    to="/login"
+                    className="btn btn-success btn-lg px-4 py-3 rounded-pill fw-bold d-flex align-items-center gap-2"
+                    style={{
+                      minWidth: "180px",
+                      backgroundColor: "#28a745",
+                      borderColor: "#28a745",
+                    }}
+                  >
+                    Vendor Login <FaArrowRight />
+                  </Link>
+                  <Link
+                    to="/admin-login"
+                    className="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-bold"
+                    style={{ minWidth: "180px" }}
+                  >
+                    Admin Login
+                  </Link>
+                </motion.div>
               </div>
             </motion.div>
 
-            {/* Right Image Section - 75% */}
-            <div className="col-lg-6 d-none d-lg-block p-0">
-              <motion.div
-                className="w-100 h-100 d-flex justify-content-end align-items-center"
-                initial="hidden"
-                animate="visible"
-                variants={fadeIn}
-                transition={{ duration: 0.6, delay: 0.2 }}
+            {/* Right Certificate Image */}
+            <motion.div
+              className="col-lg-9 d-none d-lg-flex justify-content-end align-items-center p-0"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div
+                style={{
+                  overflow: "hidden",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  width: "100%",
+                }}
               >
                 <img
                   src={sampleCertificate}
                   alt="Sample Certificate"
-                  className="img-fluid w-100"
                   style={{
-                    height: "100%",
-                    maxHeight: "100%",
+                    height: "450px",
+                    width: "auto",
                     objectFit: "cover",
-                    objectPosition: "right",
-                    clipPath: "inset(0 25% 0 0)",
+                    objectPosition: "left",
+                    // transform: "translateX(-25%)", // Show only 75%
                     borderTopLeftRadius: "12px",
-                     borderBottomLeftRadius: "12px",
-                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
+                    borderBottomLeftRadius: "12px",
+                    border: "4px solid white",
+                    boxShadow: "0 6px 24px rgba(0, 0, 0, 0.25)",
                   }}
                 />
-              </motion.div>
-            </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      
       {/* Highlights Section */}
       <section className="container my-5 py-5">
         <motion.div

@@ -94,19 +94,20 @@ const AdminOverview = ({ section }) => {
   };
 
   const handleSave = async () => {
-    try {
-      const res = await axios.put(`/vendors/${editMode}`, editData);
-      const updatedVendor = res.data;
-      setVendors((prev) =>
-        prev.map((v) => (v._id === updatedVendor._id ? updatedVendor : v))
-      );
-      toast.success("Updated Successfully");
-      setEditMode(null);
-    } catch (err) {
-      console.error(err);
-      toast.error("Update failed");
-    }
-  };
+  try {
+    const res = await axios.put(`/vendors/${editMode}`, editData);
+    const updatedVendor = res.data.vendor; 
+    setVendors((prev) =>
+      prev.map((v) => (v._id === updatedVendor._id ? updatedVendor : v))
+    );
+    toast.success("Updated Successfully");
+    setEditMode(null);
+  } catch (err) {
+    console.error("Update Error:", err);
+    toast.error("Update failed");
+  }
+};
+
 
   const handleDelete = async (id) => {
     if (window.confirm("Delete this vendor?")) {
