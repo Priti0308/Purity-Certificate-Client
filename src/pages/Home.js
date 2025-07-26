@@ -42,7 +42,7 @@ const Home = () => {
         className="text-white d-flex align-items-center justify-content-center text-center"
         style={{
           background: "linear-gradient(135deg, #102E50 0%, #1a3a6a 100%)",
-          minHeight: "100vh",
+          minHeight: "50vh",
           position: "relative",
           overflow: "hidden",
           padding: "2rem",
