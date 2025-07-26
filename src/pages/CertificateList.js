@@ -145,114 +145,179 @@ const CertificateList = () => {
       : "";
     return `${integer}${decimal ? " Point " + decimal : ""}`;
   };
-
-  const CertificatePreview = ({ cert }) => {
-    if (!cert) return null;
-    return (
-      <div
-        className="card mx-auto"
-        style={{
-          fontFamily: "Arial, sans-serif",
-          fontSize: "12px",
-          maxWidth: "816px",
-          border: "2px solid #000",
-        }}
-      >
-        <div className="card-body p-4">
-          {/* Header Section */}
-          <div className="d-flex justify-content-between align-items-center mb-2">
+const CertificatePreview = ({ cert }) => (
+    <div
+      className="card mx-auto"
+      style={{
+        fontFamily: "Arial, sans-serif",
+        fontSize: "12px",
+        maxWidth: "816px",
+        border: "2px solid #000",
+      }}
+    >
+      <div className="card-body p-4">
+        {/* Header Section */}
+        <div className="d-flex justify-content-between align-items-center mb-2 border border-dark rounded p-2">
+          {/* Left Image Box */}
+          <div
+            className="text-center border border-dark p-2"
+            style={{ width: "100px" }}
+          >
             <img
               src={cert.leftImage}
-              alt="left"
               className="img-fluid"
-              style={{
-                width: "64px",
-                height: "64px",
-                border: "1.5px solid #DC2626",
-                objectFit: "contain",
-              }}
+              style={{ width: "64px", height: "64px", objectFit: "contain" }}
+              alt="left"
             />
-            <div className="text-center">
-              <div style={{ color: "#FF4500" }} className="fs-6">
-                श्री गणेशाय नमः
+          </div>
+
+          {/* Middle Content */}
+          <div className="flex-grow-1 text-center px-3">
+            <div style={{ color: "#b7410e" }} className="fw-bold">
+              श्री गणेशाय नमः
+            </div>
+            <h2 style={{ color: "#b7410e" }} className="fw-bold mb-1">
+              {cert.headerTitle || ""}
+            </h2>
+            <div className="fw-bold mb-1">{cert.headerSubtitle || ""}</div>
+            <div>{cert.address || ""}</div>
+            <div
+              className="d-flex justify-content-between px-4 mt-2"
+              style={{ fontSize: "13px", whiteSpace: "nowrap" }}
+            >
+              <div style={{ minWidth: "120px" }}>
+                Ph: {cert.telephone || ""} <br /> I.C: {cert.icNo || ""}
               </div>
-              <h2 style={{ color: "#FF4500" }} className="fw-bold mb-1 fs-3">
-                {cert.headerTitle}
-              </h2>
-              <div className="fw-bold mb-1 fs-6">{cert.headerSubtitle}</div>
-              <div className="fs-6">{cert.address}</div>
-              <div className="fs-6">{cert.phone}</div>
-              <div className="d-flex justify-content-center gap-4 mt-1">
-                <span>IC No: {cert.icNo || "-"}</span>
-                <span>Telephone: {cert.telephoneNo || "-"}</span>
+              <div style={{ minWidth: "120px", textAlign: "right" }}>
+                Contact: {cert.phone || ""}
               </div>
             </div>
+          </div>
+
+          {/* Right Image Box */}
+          <div
+            className="text-center border border-dark p-2"
+            style={{ width: "100px" }}
+          >
             <img
               src={cert.rightImage}
-              alt="right"
               className="img-fluid"
-              style={{
-                width: "64px",
-                height: "64px",
-                border: "1.5px solid #DC2626",
-                objectFit: "contain",
-              }}
+              style={{ width: "64px", height: "64px", objectFit: "contain" }}
+              alt="right"
             />
           </div>
+        </div>
 
-          {/* Certificate Title */}
-          <div className="text-center my-4">
-            <span
-              className="badge"
-              style={{ backgroundColor: "#FF4500", color: "#fff", padding: "6px 12px" }}
+        {/* Certificate Title */}
+        <div className="text-center my-3">
+          <span
+            className="badge"
+            style={{
+              backgroundColor: "#FFFF00",
+              color: "#b7410e",
+              padding: "6px 12px",
+              fontWeight: "bold",
+            }}
+          >
+            {cert.certificateTitle || "SILVER PURITY CERTIFICATE"}
+          </span>
+        </div>
+
+        {/* Table Section */}
+        <div className="border border-dark rounded">
+          {/* Row 1 */}
+          <div className="d-flex border-bottom border-dark">
+            <div
+              className="p-2 border-end border-dark fw-bold bg-light"
+              style={{ width: "80px" }}
             >
-              {cert.certificateTitle || "SILVER PURITY CERTIFICATE"}
-            </span>
+              Name
+            </div>
+            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">
+              {cert.name || ""}
+            </div>
+            <div
+              className="p-2 border-end border-dark fw-bold bg-light"
+              style={{ width: "64px" }}
+            >
+              Sr.No
+            </div>
+            <div
+              className="p-2 bg-light fw-bold fs-5"
+              style={{ width: "128px" }}
+            >
+              {cert.serialNo || ""}
+            </div>
           </div>
-
-          {/* Table Section */}
-          <div className="border border-dark rounded">
-            <div className="d-flex border-bottom border-dark">
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "80px" }}>Name</div>
-              <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.name}</div>
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "64px" }}>S.No</div>
-              <div className="p-2 bg-light fw-bold fs-5" style={{ width: "128px" }}>{cert.serialNo}</div>
+          {/* Row 2 */}
+          <div className="d-flex border-bottom border-dark">
+            <div
+              className="p-2 border-end border-dark fw-bold bg-light"
+              style={{ width: "80px" }}
+            >
+              Item
             </div>
-            <div className="d-flex border-bottom border-dark">
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "80px" }}>Item</div>
-              <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.item}</div>
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "64px" }}>Date</div>
-              <div className="p-2 bg-light fs-5" style={{ width: "128px" }}>{new Date(cert.date).toLocaleDateString()}</div>
+            <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">
+              {cert.item || ""}
             </div>
-            <div className="d-flex border-bottom border-dark">
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "80px" }}>Fineness</div>
-              <div className="p-2 border-end border-dark bg-light flex-grow-1">
-                <div className="fw-bold fs-4">{cert.fineness} %</div>
-                <div className="fs-6">{convertToWords(cert.fineness)} Percent</div>
+            <div
+              className="p-2 border-end border-dark fw-bold bg-light"
+              style={{ width: "64px" }}
+            >
+              Date
+            </div>
+            <div className="p-2 bg-light fs-5" style={{ width: "128px" }}>
+              {cert.date || ""}
+            </div>
+          </div>
+          {/* Row 3 */}
+          <div className="d-flex border-bottom border-dark">
+            <div
+              className="p-2 border-end border-dark fw-bold bg-light"
+              style={{ width: "80px" }}
+            >
+              Fineness
+            </div>
+            <div className="p-2 border-end border-dark bg-light flex-grow-1">
+              <div className="fw-bold fs-4">{cert.fineness || ""} %</div>
+              <div className="fs-6">
+                {convertToWords(cert.fineness || "0")} Percent
               </div>
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "64px" }}>G.Wt</div>
-              <div className="p-2 bg-light" style={{ width: "128px" }}>{cert.grossWeight}</div>
             </div>
-            <div className="bg-light border-bottom border-dark">
-              <div className="d-flex">
-                <div className="flex-grow-1 p-3 border-end border-dark">
-                  <div style={{ color: "#FF4500" }} className="fw-bold fs-6 mb-2">Note</div>
-                  <div className="fs-6">
-                    <div>- We are not responsible for any melting defects</div>
-                    <div>- We are responsible for more than 0.50% difference</div>
-                    <div>- If any doubt ask for re-testing</div>
-                  </div>
+            <div
+              className="p-2 border-end border-dark fw-bold bg-light"
+              style={{ width: "64px" }}
+            >
+              G.Wt
+            </div>
+            <div className="p-2 bg-light" style={{ width: "128px" }}>
+              {cert.grossWeight || ""}
+            </div>
+          </div>
+          {/* Note Section */}
+          <div className="bg-light border-bottom border-dark">
+            <div className="d-flex">
+              <div className="flex-grow-1 p-3 border-end border-dark">
+                <div style={{ color: "#b7410e" }} className="fw-bold fs-6 mb-2">
+                  Note
                 </div>
-                <div className="p-3 text-center" style={{ width: "256px" }}>
-                  <div style={{ color: "#FF4500" }} className="fw-bold fs-6">For {cert.headerTitle}</div>
+                <div className="fs-6">
+                  <div>- We are not responsible for any melting defects</div>
+                  <div>- We are responsible for more than 0.50% difference</div>
+                  <div>- If any doubt ask for re-testing</div>
+                </div>
+              </div>
+              <div className="p-3 text-center" style={{ width: "256px" }}>
+                <div style={{ color: "#b7410e" }} className="fw-bold fs-6">
+                  For {cert.headerTitle || ""}
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -309,7 +374,7 @@ const CertificateList = () => {
                     <td>{cert.serialNo}</td>
                     <td>{cert.name}</td>
                     <td>{cert.icNo || "-"}</td>
-                    <td>{cert.telephoneNo || "-"}</td>
+                    <td>{cert.telephone || "-"}</td>
                     <td>{cert.item}</td>
                     <td>{cert.fineness}</td>
                     <td>{cert.grossWeight}</td>
