@@ -1,12 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import sampleCertificate from "../assets/sample-certificate.png";
 import {
   FaCertificate,
   FaUsersCog,
   FaUserCheck,
   FaArrowRight,
   FaShieldAlt,
+  FaUserShield,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 
@@ -39,12 +39,13 @@ const Home = () => {
     <div className="bg-light">
       {/* Hero Section */}
       <section
-        className="text-white d-flex align-items-center"
+        className="text-white d-flex align-items-center justify-content-center text-center"
         style={{
           background: "linear-gradient(135deg, #102E50 0%, #1a3a6a 100%)",
+          minHeight: "100vh",
           position: "relative",
           overflow: "hidden",
-          minHeight: "100vh",
+          padding: "2rem",
         }}
       >
         {/* Background pattern */}
@@ -58,101 +59,57 @@ const Home = () => {
           }}
         ></div>
 
-        <div className="container-fluid position-relative px-0">
-          <div className="row g-0 align-items-center">
-            {/* ✅ Left Text Section */}
-            <motion.div
-              className="col-12 col-lg-3 px-4 px-lg-5 d-flex flex-column justify-content-center text-center text-lg-start"
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
+        {/* Centered Content */}
+        <motion.div
+          className="position-relative text-center"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          style={{ maxWidth: "600px", width: "100%" }}
+        >
+          <h1
+            className="fw-bold mb-4"
+            style={{ fontSize: "2.8rem", lineHeight: "1.3" }}
+          >
+            Purity Certificate Portal
+          </h1>
+          <p
+            className="lead mb-5"
+            style={{ fontSize: "1.25rem", color: "#dcdcdc" }}
+          >
+            Trusted digital certificates for gold, sweets, and food businesses
+          </p>
+
+          {/* ✅ Buttons - Admin first */}
+          <motion.div
+            className="d-flex flex-column flex-sm-row gap-3 justify-content-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            <Link
+              to="/admin-login"
+              className="btn btn-light btn-lg px-4 py-3 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2"
+              style={{ minWidth: "200px" }}
+            >
+              <FaUserShield /> Admin Login <FaArrowRight />
+            </Link>
+            <Link
+              to="/login"
+              className="btn btn-success btn-lg px-4 py-3 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2"
               style={{
-                minHeight: "100vh",
+                minWidth: "200px",
+                backgroundColor: "#28a745",
+                borderColor: "#28a745",
               }}
             >
-              <div className="mx-auto mx-lg-0" style={{ maxWidth: "380px" }}>
-                <h1
-                  className="fw-bold mb-6"
-                  style={{ fontSize: "2.8rem", lineHeight: "1.2" }}
-                >
-                  Purity Certificate Portal
-                </h1>
-                <p
-                  className="lead mb-5"
-                  style={{
-                    fontSize: "1.25rem",
-                    color: "#dcdcdc",
-                  }}
-                >
-                  Trusted digital certificates for gold, sweets, and food
-                  businesses
-                </p>
-
-                {/* Buttons */}
-                <motion.div
-                  className="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start"
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.8 }}
-                >
-                  <Link
-                    to="/login"
-                    className="btn btn-success btn-lg px-4 py-3 rounded-pill fw-bold d-flex align-items-center gap-2"
-                    style={{
-                      minWidth: "180px",
-                      backgroundColor: "#28a745",
-                      borderColor: "#28a745",
-                    }}
-                  >
-                    Vendor Login <FaArrowRight />
-                  </Link>
-                  <Link
-                    to="/admin-login"
-                    className="btn btn-outline-light btn-lg px-4 py-3 rounded-pill fw-bold"
-                    style={{ minWidth: "180px" }}
-                  >
-                    Admin Login
-                  </Link>
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Right Certificate Image */}
-            <motion.div
-              className="col-lg-9 d-none d-lg-flex justify-content-end align-items-center p-0"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <div
-                style={{
-                  overflow: "hidden",
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  width: "100%",
-                }}
-              >
-                <img
-                  src={sampleCertificate}
-                  alt="Sample Certificate"
-                  style={{
-                    height: "450px",
-                    width: "auto",
-                    objectFit: "cover",
-                    objectPosition: "left",
-                    // transform: "translateX(-25%)", // Show only 75%
-                    borderTopLeftRadius: "12px",
-                    borderBottomLeftRadius: "12px",
-                    border: "4px solid white",
-                    boxShadow: "0 6px 24px rgba(0, 0, 0, 0.25)",
-                  }}
-                />
-              </div>
-            </motion.div>
-          </div>
-        </div>
+              <FaUserCheck /> Vendor Login
+            </Link>
+          </motion.div>
+        </motion.div>
       </section>
 
+      {/* ✅ Keep All Other Sections Same */}
       {/* Highlights Section */}
       <section className="container my-5 py-5">
         <motion.div
