@@ -1,53 +1,55 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState, useCallback } from "react";
+import axios from "axios";
 import {
   FaEye,
   FaFilePdf,
   FaTrash,
-  // FaSpinner,
   FaArrowLeft,
   FaCheck,
   FaTimes,
-} from 'react-icons/fa';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import { useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+} from "react-icons/fa";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CertificateList = () => {
   const navigate = useNavigate();
   const [certificates, setCertificates] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, rejected: 0 });
+  const [stats, setStats] = useState({
+    total: 0,
+    approved: 0,
+    pending: 0,
+    rejected: 0,
+  });
   const [previewCert, setPreviewCert] = useState(null);
   const [certToDownload, setCertToDownload] = useState(null);
 
   const fetchCertificates = useCallback(async () => {
     try {
-      // setLoading(true);
-      const token = localStorage.getItem('vendorToken');
-      const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/certificates`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const token = localStorage.getItem("vendorToken");
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/certificates`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setCertificates(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error('Error fetching certificates:', err);
+      console.error("Error fetching certificates:", err);
       setCertificates([]);
-    } finally {
-      // setLoading(false);
     }
   }, []);
 
   const fetchStats = useCallback(async () => {
     try {
-      const token = localStorage.getItem('vendorToken');
-      const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/certificates/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const token = localStorage.getItem("vendorToken");
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_BASE_URL}/api/certificates/stats`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setStats(res.data);
     } catch (err) {
-      console.error('Error fetching stats:', err);
+      console.error("Error fetching stats:", err);
     }
   }, []);
 
@@ -58,13 +60,15 @@ const CertificateList = () => {
 
   const handleStatusChange = async (certId, status) => {
     try {
-      const token = localStorage.getItem('vendorToken');
+      const token = localStorage.getItem("vendorToken");
       await axios.put(
         `${process.env.REACT_APP_API_BASE_URL}/api/certificates/${certId}`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Certificate ${status === 'approved' ? 'approved' : 'rejected'} successfully.`);
+      toast.success(
+        `Certificate ${status === "approved" ? "approved" : "rejected"} successfully.`
+      );
       fetchCertificates();
       fetchStats();
     } catch (err) {
@@ -78,105 +82,169 @@ const CertificateList = () => {
       setCertToDownload(cert);
       await new Promise((resolve) => setTimeout(resolve, 700));
 
-      const preview = document.getElementById('download-preview');
-      if (!preview) return alert('Preview not found.');
+      const preview = document.getElementById("download-preview");
+      if (!preview) return alert("Preview not found.");
 
       const canvas = await html2canvas(preview, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = 210;
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`certificate_${cert.serialNo}.pdf`);
       setCertToDownload(null);
     } catch (error) {
-      console.error('Error downloading certificate:', error);
-      toast.error('Failed to process certificate');
+      console.error("Error downloading certificate:", error);
+      toast.error("Failed to process certificate");
     }
   };
 
   const handleDelete = async (certId) => {
-    if (!window.confirm('Are you sure you want to delete this certificate?')) return;
-
+    if (!window.confirm("Are you sure you want to delete this certificate?")) return;
     try {
-      const token = localStorage.getItem('vendorToken');
-      await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/certificates/${certId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success('Certificate deleted successfully.');
+      const token = localStorage.getItem("vendorToken");
+      await axios.delete(
+        `${process.env.REACT_APP_API_BASE_URL}/api/certificates/${certId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Certificate deleted successfully.");
       fetchCertificates();
       fetchStats();
     } catch (err) {
-      console.error('Error deleting certificate:', err);
-      toast.error('Failed to delete certificate. Please try again.');
+      console.error("Error deleting certificate:", err);
+      toast.error("Failed to delete certificate. Please try again.");
     }
   };
 
-  
+  const convertToWords = (num) => {
+    if (!num || isNaN(num)) return "";
+    const map = [
+      "Zero",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+    ];
+    const parts = num.toString().split(".");
+    const integer = parts[0]
+      .split("")
+      .map((d) => map[d])
+      .join(" ");
+    const decimal = parts[1]
+      ? parts[1]
+          .split("")
+          .map((d) => map[d])
+          .join(" ")
+      : "";
+    return `${integer}${decimal ? " Point " + decimal : ""}`;
+  };
 
   const CertificatePreview = ({ cert }) => {
     if (!cert) return null;
     return (
       <div
         className="card mx-auto"
-        style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px', maxWidth: '816px', border: '2px solid #000' }}
+        style={{
+          fontFamily: "Arial, sans-serif",
+          fontSize: "12px",
+          maxWidth: "816px",
+          border: "2px solid #000",
+        }}
       >
         <div className="card-body p-4">
+          {/* Header Section */}
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <img src={cert.leftImage} alt="left" className="img-fluid" style={{ width: '64px', height: '64px', border: '1.5px solid #DC2626', objectFit: 'contain' }} />
+            <img
+              src={cert.leftImage}
+              alt="left"
+              className="img-fluid"
+              style={{
+                width: "64px",
+                height: "64px",
+                border: "1.5px solid #DC2626",
+                objectFit: "contain",
+              }}
+            />
             <div className="text-center">
-              <div style={{ color: '#FF4500' }} className="fs-6">श्री गणेशाय नमः</div>
-              <h2 style={{ color: '#FF4500' }} className="fw-bold mb-1 fs-3">{cert.headerTitle}</h2>
+              <div style={{ color: "#FF4500" }} className="fs-6">
+                श्री गणेशाय नमः
+              </div>
+              <h2 style={{ color: "#FF4500" }} className="fw-bold mb-1 fs-3">
+                {cert.headerTitle}
+              </h2>
               <div className="fw-bold mb-1 fs-6">{cert.headerSubtitle}</div>
               <div className="fs-6">{cert.address}</div>
               <div className="fs-6">{cert.phone}</div>
+              <div className="d-flex justify-content-center gap-4 mt-1">
+                <span>IC No: {cert.icNo || "-"}</span>
+                <span>Telephone: {cert.telephoneNo || "-"}</span>
+              </div>
             </div>
-            <img src={cert.rightImage} alt="right" className="img-fluid" style={{ width: '64px', height: '64px', border: '1.5px solid #DC2626', objectFit: 'contain' }} />
+            <img
+              src={cert.rightImage}
+              alt="right"
+              className="img-fluid"
+              style={{
+                width: "64px",
+                height: "64px",
+                border: "1.5px solid #DC2626",
+                objectFit: "contain",
+              }}
+            />
           </div>
 
+          {/* Certificate Title */}
           <div className="text-center my-4">
-            <span className="badge" style={{ backgroundColor: '#FF4500', color: '#fff', padding: '6px 12px' }}>
-              {cert.certificateTitle || 'SILVER PURITY CERTIFICATE'}
+            <span
+              className="badge"
+              style={{ backgroundColor: "#FF4500", color: "#fff", padding: "6px 12px" }}
+            >
+              {cert.certificateTitle || "SILVER PURITY CERTIFICATE"}
             </span>
           </div>
 
+          {/* Table Section */}
           <div className="border border-dark rounded">
             <div className="d-flex border-bottom border-dark">
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Name</div>
+              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "80px" }}>Name</div>
               <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.name}</div>
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>S.No</div>
-              <div className="p-2 bg-light fw-bold fs-5" style={{ width: '128px' }}>{cert.serialNo}</div>
+              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "64px" }}>S.No</div>
+              <div className="p-2 bg-light fw-bold fs-5" style={{ width: "128px" }}>{cert.serialNo}</div>
             </div>
             <div className="d-flex border-bottom border-dark">
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Item</div>
+              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "80px" }}>Item</div>
               <div className="p-2 border-end border-dark fs-5 bg-light flex-grow-1">{cert.item}</div>
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>Date</div>
-              <div className="p-2 bg-light fs-5" style={{ width: '128px' }}>{new Date(cert.date).toLocaleDateString()}</div>
+              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "64px" }}>Date</div>
+              <div className="p-2 bg-light fs-5" style={{ width: "128px" }}>{new Date(cert.date).toLocaleDateString()}</div>
             </div>
             <div className="d-flex border-bottom border-dark">
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '80px' }}>Fineness</div>
+              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "80px" }}>Fineness</div>
               <div className="p-2 border-end border-dark bg-light flex-grow-1">
                 <div className="fw-bold fs-4">{cert.fineness} %</div>
-                <div className="fs-6">{cert.fineness} Percent</div>
+                <div className="fs-6">{convertToWords(cert.fineness)} Percent</div>
               </div>
-              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: '64px' }}>G.Wt</div>
-              <div className="p-2 bg-light" style={{ width: '128px' }}>{cert.grossWeight}</div>
+              <div className="p-2 border-end border-dark fw-bold bg-light" style={{ width: "64px" }}>G.Wt</div>
+              <div className="p-2 bg-light" style={{ width: "128px" }}>{cert.grossWeight}</div>
             </div>
             <div className="bg-light border-bottom border-dark">
               <div className="d-flex">
                 <div className="flex-grow-1 p-3 border-end border-dark">
-                  <div style={{ color: '#FF4500' }} className="fw-bold fs-6 mb-2">Note</div>
+                  <div style={{ color: "#FF4500" }} className="fw-bold fs-6 mb-2">Note</div>
                   <div className="fs-6">
                     <div>- We are not responsible for any melting defects</div>
                     <div>- We are responsible for more than 0.50% difference</div>
                     <div>- If any doubt ask for re-testing</div>
                   </div>
                 </div>
-                <div className="p-3 text-center" style={{ width: '256px' }}>
-                  <div style={{ color: '#FF4500' }} className="fw-bold fs-6">For {cert.headerTitle}</div>
-                  <div style={{ color: '#FF4500' }} className="fs-6 mt-2">Authorized by: {cert.name}</div>
+                <div className="p-3 text-center" style={{ width: "256px" }}>
+                  <div style={{ color: "#FF4500" }} className="fw-bold fs-6">For {cert.headerTitle}</div>
                 </div>
               </div>
             </div>
@@ -188,14 +256,17 @@ const CertificateList = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'approved': return 'bg-success';
-      case 'pending': return 'bg-warning text-dark';
-      case 'rejected': return 'bg-danger';
-      default: return 'bg-secondary';
+      case "approved":
+        return "bg-success";
+      case "pending":
+        return "bg-warning text-dark";
+      case "rejected":
+        return "bg-danger";
+      default:
+        return "bg-secondary";
     }
   };
 
-  
   return (
     <div className="container py-5">
       <h2 className="text-center text-black fw-bold mb-4">Certificate Management</h2>
@@ -220,6 +291,8 @@ const CertificateList = () => {
                 <th>Sr.No</th>
                 <th>Serial No</th>
                 <th>Name</th>
+                <th>IC No</th>
+                <th>Telephone</th>
                 <th>Item</th>
                 <th>Fineness (%)</th>
                 <th>Weight (g)</th>
@@ -235,30 +308,52 @@ const CertificateList = () => {
                     <td>{idx + 1}</td>
                     <td>{cert.serialNo}</td>
                     <td>{cert.name}</td>
+                    <td>{cert.icNo || "-"}</td>
+                    <td>{cert.telephoneNo || "-"}</td>
                     <td>{cert.item}</td>
                     <td>{cert.fineness}</td>
                     <td>{cert.grossWeight}</td>
                     <td>{new Date(cert.date).toLocaleDateString()}</td>
                     <td>
                       <span className={`badge ${getStatusColor(cert.status)}`}>
-                        {cert.status || 'pending'}
+                        {cert.status || "pending"}
                       </span>
                     </td>
                     <td>
                       <div className="d-flex flex-wrap gap-1 justify-content-center">
-                        <button className="btn btn-sm btn-outline-primary" onClick={() => setPreviewCert(cert)} title="View">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => setPreviewCert(cert)}
+                          title="View"
+                        >
                           <FaEye />
                         </button>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleDownloadPDF(cert)} title="Download PDF">
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleDownloadPDF(cert)}
+                          title="Download PDF"
+                        >
                           <FaFilePdf />
                         </button>
-                        <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(cert._id)} title="Delete">
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(cert._id)}
+                          title="Delete"
+                        >
                           <FaTrash />
                         </button>
-                        <button className="btn btn-sm btn-success" onClick={() => handleStatusChange(cert._id, 'approved')} title="Approve">
+                        <button
+                          className="btn btn-sm btn-success"
+                          onClick={() => handleStatusChange(cert._id, "approved")}
+                          title="Approve"
+                        >
                           <FaCheck />
                         </button>
-                        <button className="btn btn-sm btn-warning text-white" onClick={() => handleStatusChange(cert._id, 'rejected')} title="Reject">
+                        <button
+                          className="btn btn-sm btn-warning text-white"
+                          onClick={() => handleStatusChange(cert._id, "rejected")}
+                          title="Reject"
+                        >
                           <FaTimes />
                         </button>
                       </div>
@@ -267,7 +362,9 @@ const CertificateList = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="9" className="text-center py-4 text-muted">No certificates found</td>
+                  <td colSpan="11" className="text-center py-4 text-muted">
+                    No certificates found
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -276,18 +373,27 @@ const CertificateList = () => {
       </div>
 
       {certToDownload && (
-        <div id="download-preview" style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        <div id="download-preview" style={{ position: "absolute", left: "-9999px", top: 0 }}>
           <CertificatePreview cert={certToDownload} />
         </div>
       )}
 
       {previewCert && (
-        <div className="modal show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          role="dialog"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           <div className="modal-dialog modal-xl modal-dialog-centered" role="document">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Certificate Preview</h5>
-                <button type="button" className="btn-close" onClick={() => setPreviewCert(null)}></button>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setPreviewCert(null)}
+                ></button>
               </div>
               <div className="modal-body">
                 <CertificatePreview cert={previewCert} />
@@ -295,7 +401,6 @@ const CertificateList = () => {
             </div>
           </div>
         </div>
-        
       )}
 
       <ToastContainer position="top-right" autoClose={3000} />

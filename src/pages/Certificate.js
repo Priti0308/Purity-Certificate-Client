@@ -27,6 +27,8 @@ const Certificate = () => {
     headerSubtitle: "",
     address: "",
     phone: "",
+    telephone: "",
+    icNo: "",
     certificateTitle: "",
   };
 
@@ -52,20 +54,18 @@ const Certificate = () => {
   }, []);
 
   useEffect(() => {
-  const storedVendor = localStorage.getItem("vendor");
-  if (storedVendor) {
-    const vendorData = JSON.parse(storedVendor);
-    console.log("Vendor Data for Certificate:", vendorData);
-
-    setFormData((prev) => ({
-      ...prev,
-      headerTitle: vendorData.businessName || "",
-      name: vendorData.ownerName || vendorData.name || "",
-      address: vendorData.address || "",
-      phone: vendorData.mobile || "",
-    }));
-  }
-}, []);
+    const storedVendor = localStorage.getItem("vendor");
+    if (storedVendor) {
+      const vendorData = JSON.parse(storedVendor);
+      setFormData((prev) => ({
+        ...prev,
+        headerTitle: vendorData.businessName || "",
+        address: vendorData.address || "",
+        phone: vendorData.mobile || "",
+        
+      }));
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -78,7 +78,6 @@ const Certificate = () => {
     const imageURL = URL.createObjectURL(file);
     setFormData((prev) => ({ ...prev, [side]: imageURL }));
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -101,10 +100,12 @@ const Certificate = () => {
           payload,
           { headers }
         );
-        setCertificates((prev) =>
-          prev.map((cert) => (cert._id === editId ? response.data : cert))
-        );
-        toast.success("Certificate updated successfully.");
+        if (response.data) {
+          setCertificates((prev) =>
+            prev.map((cert) => (cert._id === editId ? response.data : cert))
+          );
+        }
+        toast.success("Certificate updated successfully");
         setEditId(null);
       } else {
         response = await axios.post(
@@ -112,16 +113,26 @@ const Certificate = () => {
           payload,
           { headers }
         );
-        setCertificates((prev) => [...prev, response.data]);
-        toast.success("Certificate submitted successfully.");
+
+        if (response.data && response.data._id) {
+          setCertificates((prev) => [...prev, response.data]);
+        } else {
+          
+          const refresh = await axios.get(
+            `${process.env.REACT_APP_API_BASE_URL}/api/certificates`,
+            { headers }
+          );
+          setCertificates(refresh.data);
+        }
+
+        toast.success("Certificate submitted successfully");
       }
 
-      // Delay reset to allow preview & user feedback
+      // Reset form after success
       setTimeout(() => {
         setFormData((prev) => ({
           ...initialForm,
           headerTitle: prev.headerTitle,
-          name: prev.name,
           address: prev.address,
           phone: prev.phone,
         }));
@@ -130,7 +141,7 @@ const Certificate = () => {
     } catch (error) {
       console.error("Error saving certificate:", error);
       toast.error(
-        error.response?.data?.message || "❌ Failed to save certificate."
+        error.response?.data?.message || "Failed to save certificate"
       );
     }
   };
@@ -205,56 +216,76 @@ const Certificate = () => {
       }}
     >
       <div className="card-body p-4">
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <img
-            src={cert.leftImage}
-            className="img-fluid"
-            style={{
-              width: "64px",
-              height: "64px",
-              border: "1.5px solid #DC2626",
-              objectFit: "contain",
-            }}
-            alt="left"
-          />
-          <div className="text-center">
-            <div style={{ color: "#FF4500" }} className="fs-6">
+        {/* Header Section */}
+        <div className="d-flex justify-content-between align-items-center mb-2 border border-dark rounded p-2">
+          {/* Left Image Box */}
+          <div
+            className="text-center border border-dark p-2"
+            style={{ width: "100px" }}
+          >
+            <img
+              src={cert.leftImage}
+              className="img-fluid"
+              style={{ width: "64px", height: "64px", objectFit: "contain" }}
+              alt="left"
+            />
+          </div>
+
+          {/* Middle Content */}
+          <div className="flex-grow-1 text-center px-3">
+            <div style={{ color: "#b7410e" }} className="fw-bold">
               श्री गणेशाय नमः
             </div>
-            <h2 style={{ color: "#FF4500" }} className="fw-bold mb-1 fs-3">
+            <h2 style={{ color: "#b7410e" }} className="fw-bold mb-1">
               {cert.headerTitle || ""}
             </h2>
-            <div className="fw-bold mb-1 fs-6">{cert.headerSubtitle || ""}</div>
-            <div className="fs-6">{cert.address || ""}</div>
-            <div className="fs-6">{cert.phone || ""}</div>
+            <div className="fw-bold mb-1">{cert.headerSubtitle || ""}</div>
+            <div>{cert.address || ""}</div>
+            <div
+              className="d-flex justify-content-between px-4 mt-2"
+              style={{ fontSize: "13px", whiteSpace: "nowrap" }}
+            >
+              <div style={{ minWidth: "120px" }}>
+                Ph: {cert.telephone || ""} <br /> I.C: {cert.icNo || ""}
+              </div>
+              <div style={{ minWidth: "120px", textAlign: "right" }}>
+                Contact: {cert.phone || ""}
+              </div>
+            </div>
           </div>
-          <img
-            src={cert.rightImage}
-            className="img-fluid"
-            style={{
-              width: "64px",
-              height: "64px",
-              border: "1.5px solid #DC2626",
-              objectFit: "contain",
-            }}
-            alt="right"
-          />
+
+          {/* Right Image Box */}
+          <div
+            className="text-center border border-dark p-2"
+            style={{ width: "100px" }}
+          >
+            <img
+              src={cert.rightImage}
+              className="img-fluid"
+              style={{ width: "64px", height: "64px", objectFit: "contain" }}
+              alt="right"
+            />
+          </div>
         </div>
 
-        <div className="text-center my-4">
+        {/* Certificate Title */}
+        <div className="text-center my-3">
           <span
             className="badge"
             style={{
               backgroundColor: "#FFFF00",
-              color: "#fff",
+              color: "#b7410e",
               padding: "6px 12px",
+              fontWeight: "bold",
             }}
           >
             {cert.certificateTitle || "SILVER PURITY CERTIFICATE"}
           </span>
         </div>
 
+        {/* Table Section */}
         <div className="border border-dark rounded">
+          {/* Row 1 */}
           <div className="d-flex border-bottom border-dark">
             <div
               className="p-2 border-end border-dark fw-bold bg-light"
@@ -278,6 +309,7 @@ const Certificate = () => {
               {cert.serialNo || ""}
             </div>
           </div>
+          {/* Row 2 */}
           <div className="d-flex border-bottom border-dark">
             <div
               className="p-2 border-end border-dark fw-bold bg-light"
@@ -298,6 +330,7 @@ const Certificate = () => {
               {cert.date || ""}
             </div>
           </div>
+          {/* Row 3 */}
           <div className="d-flex border-bottom border-dark">
             <div
               className="p-2 border-end border-dark fw-bold bg-light"
@@ -321,10 +354,11 @@ const Certificate = () => {
               {cert.grossWeight || ""}
             </div>
           </div>
+          {/* Note Section */}
           <div className="bg-light border-bottom border-dark">
             <div className="d-flex">
               <div className="flex-grow-1 p-3 border-end border-dark">
-                <div style={{ color: "#FF4500" }} className="fw-bold fs-6 mb-2">
+                <div style={{ color: "#b7410e" }} className="fw-bold fs-6 mb-2">
                   Note
                 </div>
                 <div className="fs-6">
@@ -334,10 +368,9 @@ const Certificate = () => {
                 </div>
               </div>
               <div className="p-3 text-center" style={{ width: "256px" }}>
-                <div style={{ color: "#FF4500" }} className="fw-bold fs-6">
+                <div style={{ color: "#b7410e" }} className="fw-bold fs-6">
                   For {cert.headerTitle || ""}
                 </div>
-                {/* <div style={{ color: '#FF4500' }} className="fs-6 mt-2"> {cert.name || ''}</div> */}
               </div>
             </div>
           </div>
@@ -359,6 +392,7 @@ const Certificate = () => {
         {editId ? "Edit" : "Create"} Purity Certificate
       </h3>
 
+      {/* Form Section */}
       <div className="card shadow mb-5">
         <div className="card-body">
           <form onSubmit={handleSubmit}>
@@ -379,6 +413,8 @@ const Certificate = () => {
                 { name: "headerTitle", placeholder: "Company name" },
                 { name: "headerSubtitle", placeholder: "Company subtitle" },
                 { name: "address", placeholder: "Business address" },
+                { name: "telephone", placeholder: "Telephone" },
+                { name: "icNo", placeholder: "IC No" },
                 { name: "phone", placeholder: "Phone" },
                 { name: "serialNo", placeholder: "Serial No" },
                 { name: "name", placeholder: "Customer Name" },
@@ -438,6 +474,7 @@ const Certificate = () => {
         </div>
       )}
 
+      {/* Submitted Certificates */}
       <div className="card shadow mb-5">
         <div className="card-header bg-dark text-white fw-bold">
           Submitted Certificates
@@ -445,7 +482,7 @@ const Certificate = () => {
         <div className="card-body">
           <div className="table-responsive">
             <table className="table table-bordered">
-              <thead className="table-light">
+              <thead className="table-dark">
                 <tr>
                   <th>Sr.No</th>
                   <th>Name</th>
@@ -495,11 +532,18 @@ const Certificate = () => {
         </div>
       </div>
 
-      {/* Hidden preview for PDF download */}
+      {/* PDF download */}
       {certToDownload && (
         <div
           id="download-preview"
-          style={{ position: "absolute", left: "-9999px", top: 0 }}
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            top: 0,
+            backgroundColor: "#fff",
+            width: "816px", // fix width so layout doesn't shrink
+            padding: "20px",
+          }}
         >
           <CertificatePreview cert={certToDownload} />
         </div>

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../../api/axiosInstance";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ContactMessages = () => {
   const [messages, setMessages] = useState([]);
@@ -28,10 +30,10 @@ const ContactMessages = () => {
     try {
       await axios.delete(`/contact/${id}`); 
       setMessages((prev) => prev.filter((msg) => msg._id !== id)); 
-      alert("Message deleted successfully.");
+      toast.success("Message deleted successfully.");
     } catch (err) {
       console.error("Failed to delete message", err);
-      alert("Failed to delete message. Please try again.");
+      toast.error("Failed to delete message. Please try again.");
     }
   };
 
@@ -76,6 +78,7 @@ const ContactMessages = () => {
           </tbody>
         </table>
       )}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 };
